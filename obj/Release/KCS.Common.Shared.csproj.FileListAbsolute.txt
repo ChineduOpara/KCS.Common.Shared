@@ -1,0 +1,14 @@
+C:\Users\Chinedu\Documents\Visual Studio 2010\Projects\KCS.Common\KCS.Common.Shared\bin\Release\KCS.Common.Shared.dll.config
+C:\Users\Chinedu\Documents\Visual Studio 2010\Projects\KCS.Common\KCS.Common.Shared\bin\Release\KCS.Common.Shared.dll
+C:\Users\Chinedu\Documents\Visual Studio 2010\Projects\KCS.Common\KCS.Common.Shared\bin\Release\EPPlus.dll
+C:\Users\Chinedu\Documents\Visual Studio 2010\Projects\KCS.Common\KCS.Common.Shared\obj\Release\KCS.Common.Shared.Mpr.resources
+C:\Users\Chinedu\Documents\Visual Studio 2010\Projects\KCS.Common\KCS.Common.Shared\obj\Release\KCS.Common.Shared.dll
+C:\Users\Chinedu\Documents\Visual Studio 2010\Projects\KCS.Common\KCS.Common.Shared\obj\Release\KCS.Common.Shared.csprojResolveAssemblyReference.cache
+C:\Users\Chinedu\Documents\Visual Studio 2010\Projects\KCS.Common\KCS.Common.Shared\obj\Release\KCS.Common.Shared.csproj.GenerateResource.Cache
+C:\Users\copara\Documents\Visual Studio 2012\Projects\KCS.Common\KCS.Common.Shared\bin\Release\API\Countries.xml
+C:\Users\copara\Documents\Visual Studio 2012\Projects\KCS.Common\KCS.Common.Shared\bin\Release\KCS.Common.Shared.dll.config
+C:\Users\copara\Documents\Visual Studio 2012\Projects\KCS.Common\KCS.Common.Shared\bin\Release\KCS.Common.Shared.dll
+C:\Users\copara\Documents\Visual Studio 2012\Projects\KCS.Common\KCS.Common.Shared\bin\Release\EPPlus.dll
+C:\Users\copara\Documents\Visual Studio 2012\Projects\KCS.Common\KCS.Common.Shared\obj\Release\KCS.Common.Shared.Mpr.resources
+C:\Users\copara\Documents\Visual Studio 2012\Projects\KCS.Common\KCS.Common.Shared\obj\Release\KCS.Common.Shared.csproj.GenerateResource.Cache
+C:\Users\copara\Documents\Visual Studio 2012\Projects\KCS.Common\KCS.Common.Shared\obj\Release\KCS.Common.Shared.dll
