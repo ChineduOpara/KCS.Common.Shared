@@ -9,6 +9,24 @@ namespace KCS.Common.Shared
 {
     public static class ControlsExtensions
     {
+        public static Form GetForm(Type type)
+        {
+            Form form = null;
+            foreach (Form f in Application.OpenForms)
+            {
+                if (f.GetType().Equals(type))
+                {
+                    if (f.WindowState == FormWindowState.Minimized)
+                    {
+                        f.WindowState = FormWindowState.Normal;
+                    }
+                    return f;
+                }
+            }
+
+            return form;
+        }
+
         /// <summary>
         /// Gets the number of instances of a Type.
         /// </summary>
@@ -816,7 +834,7 @@ namespace KCS.Common.Shared
         }
 
         /// <summary>
-        /// Created by GGEORGIEV.Checks if there are selected nodes
+        /// Checks if there are checked nodes
         /// </summary>
         /// <param name="parent">Parent TreeNode.</param>
         /// <returns>TRUE/FALSE</returns>

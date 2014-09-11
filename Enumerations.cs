@@ -7,10 +7,34 @@ using System.Text;
 namespace KCS.Common.Shared
 {
     /// <summary>
-    /// Contains all Enumerations for this project.
+    /// Contains many common Enumerations.
     /// </summary>
     public static class Enumerations
     {
+        public enum WeightUnit
+        {
+            [Description("LBS")]
+            Pounds,
+            [Description("OZ")]
+            Ounces,
+            [Description("KG")]
+            Kilograms,
+            [Description("G")]
+            Grams
+        }
+
+        public enum DimensionUnit
+        {
+            [Description("IN")]
+            Inches,
+            [Description("FT")]
+            Feet,
+            [Description("CM")]
+            Centimeters,
+            [Description("M")]
+            Meters
+        }
+
         public enum MessageType
         {
             Unknown = 0,

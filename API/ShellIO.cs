@@ -91,61 +91,26 @@ namespace KCS.Common.Shared
 		/// Deletes a file.
 		/// </summary>
 		/// <param name="form">Parent form.</param>
-		/// <param name="path">Full path to file.</param>
+		/// <param name="paths">Full paths to files or folders (no mixing and matching).</param>
 		/// <param name="aborted">Was the operation aborted?</param>
-		public static void DeleteFile(Form form, String path, ref Boolean aborted)
+        public static void DeleteFiles(IntPtr windowHandle, IEnumerable<string> paths, String progressTitle, ref Boolean aborted)
 		{
+            var delimitedPaths = string.Join("\0", paths.ToArray());
+            
 			int retval = 0;
 			Win32API.Shell32.SHFILEOPSTRUCT shf = new Win32API.Shell32.SHFILEOPSTRUCT();
 			shf.wFunc = Win32API.Shell32.FO_DELETE;
 			shf.fFlags = Win32API.Shell32.FOF_NOCONFIRMATION;
-			shf.lpszProgressTitle = "Deleting File " + System.IO.Path.GetFileName(path) + "...";
-			shf.hwnd = form.Handle;
-			shf.pFrom = path + "\0";
+            shf.lpszProgressTitle = progressTitle;
+            if (windowHandle != IntPtr.Zero)
+            {
+                shf.hwnd = windowHandle;
+            }
+            shf.pFrom = delimitedPaths + "\0";
 			shf.fAnyOperationsAborted = false;
 			retval = Win32API.Shell32.SHFileOperation(ref shf);
 			aborted = (retval != 0) || shf.fAnyOperationsAborted;
 		}
-
-		//public static void CopyStreamToStream(Stream source, Stream destination, Action<Stream, Stream, Exception> completed)
-		//{
-		//    byte[] buffer = new byte[0x1000];
-		//    AsyncOperation asyncOp = AsyncOperationManager.CreateOperation(null);
-
-		//    Action<Exception> done = e =>
-		//    {
-		//        if (completed != null) asyncOp.Post(delegate
-		//             {
-		//                 completed(source, destination, e);
-		//             }, null);
-		//    };
-
-		//    AsyncCallback rc = null;
-		//    rc = readResult =>
-		//    {
-		//        try
-		//        {
-		//            int read = source.EndRead(readResult);
-		//            if (read > 0)
-		//            {
-		//                destination.BeginWrite(buffer, 0, read, writeResult =>
-		//                {
-		//                    try
-		//                    {
-		//                        destination.EndWrite(writeResult);
-		//                        source.BeginRead(buffer, 0, buffer.Length, rc, null);
-		//                    }
-		//                    catch (Exception exc) { done(exc); }
-		//                },
-		//                null);
-		//            }
-		//            else done(null);
-		//        }
-		//        catch (Exception exc) { done(exc); }
-		//    };
-
-		//    source.BeginRead(buffer, 0, buffer.Length, rc, null);
-		//}
 
 		/// <summary>
 		/// Gets the icon associated with a given file. This overload assumes that we want the small icon size.

@@ -1095,20 +1095,19 @@ namespace KCS.Common.Shared
         /// <param name="path">Folder to list files from.</param>
         /// <param name="extensions">Array of filename extensions.</param>
         /// <returns>Array of FileInfo objects.</returns>
-        public static IEnumerable<FileInfo> GetFiles(this DirectoryInfo dirInfo, string path, bool recursive, IEnumerable<string> extensions)
+        public static IEnumerable<FileInfo> GetFiles(this DirectoryInfo dirInfo, bool recursive, IEnumerable<string> extensions)
         {
-            var extList = extensions.ToList().ConvertAll(x => x.StartsWith(".") ? x : "." + x);
+            var extList = extensions.Select(x => x.Replace("*", "")).ToList();
+            extList = extList.ConvertAll(x => x.StartsWith(".") ? x : "." + x);
             var allowedExtensions = new HashSet<string>(extList, StringComparer.OrdinalIgnoreCase);
-
-            //var list = dirInfo.EnumerateFiles("*.*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);            
 
             return dirInfo.EnumerateFiles("*.*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
                           .Where(f => allowedExtensions.Contains(f.Extension));
         }
 
-        public static IEnumerable<FileInfo> GetFiles(this DirectoryInfo dirInfo, string path, params string[] extensions)
+        public static IEnumerable<FileInfo> GetFiles(this DirectoryInfo dirInfo, params string[] extensions)
         {
-            return GetFiles(dirInfo, path, true, extensions);
+            return GetFiles(dirInfo, true, extensions);
         }
 
         /// <summary>

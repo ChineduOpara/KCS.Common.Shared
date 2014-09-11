@@ -116,6 +116,9 @@
     <Compile Include="Classes\DateRange.cs" />
     <Compile Include="Classes\GenericMessages.cs" />
     <Compile Include="Classes\Calendar.cs" />
+    <Compile Include="Classes\HtmlDocument.cs" />
+    <Compile Include="Classes\IISWebsite.cs" />
+    <Compile Include="Classes\IISWebsiteBinding.cs" />
     <Compile Include="Classes\MSExcel.cs" />
     <Compile Include="Encryption\RijndaelSimple.cs" />
     <Compile Include="Enumerations.cs" />
@@ -156,9 +159,18 @@
     <Compile Include="Classes\TreeNodeComparer.cs" />
     <Compile Include="API\Utility.cs" />
     <Compile Include="API\Win32API.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="API\Win32API.resx">
@@ -166,9 +178,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="API\Countries.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
+    <EmbeddedResource Include="API\Countries.xml" />
     <Content Include="ThirdPartyDLL\EPPlus.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

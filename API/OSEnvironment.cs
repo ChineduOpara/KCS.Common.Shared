@@ -39,6 +39,45 @@ namespace KCS.Common.Shared
         }
 
         /// <summary>
+        /// Checks that a DLL is JIT-Optimized
+        /// </summary>
+        /// <param name="path">Full path to DLL or EXE</param>
+        /// <returns>True if the assembly is JIT-optimized.</returns>
+        public static bool IsJITOptimized(string path)
+        {
+            //var ass = Assembly.LoadFile(path);
+            var asm = Assembly.ReflectionOnlyLoadFrom(path);
+            var attribs = asm.GetReferencedAssemblies()
+                .Select(Assembly.Load)
+                .Where(a => a.IsDefined(typeof(DebuggableAttribute), false))
+                .ToList();
+            //var attribs = asm.GetCustomAttributes(typeof(DebuggableAttribute), false);
+            //var attribs = asm.GetCustomAttributesData().ToList();
+
+            // If the 'DebuggableAttribute' is not found then it is definitely an OPTIMIZED build
+            if (attribs.Count > 0)
+            {
+                // Just because the 'DebuggableAttribute' is found doesn't necessarily mean
+                // it's a DEBUG build; we have to check the JIT Optimization flag
+                // i.e. it could have the "generate PDB" checked but have JIT Optimization enabled
+                var da = attribs.First();
+                return true;
+
+                //var debuggableAttribute = attribs.First().AttributeType as DebuggableAttribute;
+                //bool isJITOptimized = false;
+                //if (debuggableAttribute != null)
+                //{
+                //    isJITOptimized = !debuggableAttribute.IsJITOptimizerDisabled;
+                //}
+                //return isJITOptimized;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Attempts to get the PUBLISH version of an application. If that fails, gets the Assembly version.
         /// </summary>
         /// <returns>System.Version.</returns>
@@ -63,8 +102,13 @@ namespace KCS.Common.Shared
             }
             catch
             {
-                return Assembly.GetEntryAssembly().GetName().Version;
+                return GetApplicationVersion(Assembly.GetEntryAssembly());
             }
+        }
+
+        public static Version GetApplicationVersion(Assembly asm)
+        {
+            return asm.GetName().Version;
         }
 
         /// <summary>

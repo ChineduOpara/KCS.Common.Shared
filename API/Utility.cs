@@ -2094,95 +2094,95 @@ namespace KCS.Common.Shared
             return value.Substring(startP, endP - startP).Trim();
         }
 
-        /// <summary>
-        /// Give a list of parms separated by a comma, returns the parms with proper type casted in an object array.
-        /// </summary>
-        /// <param name="parmString">e.g. '1234',455,'Levi''s Strauss', 'abc', 123.0</param>
-        /// <param name="parmValues">object[] '1234',455,'Levi's','abc',123.0.  Notice changing from 2 single quotes to 1 quote </param>
-        public static void ExtractLiteralParms(string parmString, ref object[] parmValues)
-        {
-            int i = 0;
-            string s = parmString + ",";
-            int m = -1; // points to the first char of parm
-            int n = 0; // points to the last char of parm
-            int q = 0; // quote count
+        ///// <summary>
+        ///// Give a list of parms separated by a comma, returns the parms with proper type casted in an object array.
+        ///// </summary>
+        ///// <param name="parmString">e.g. '1234',455,'Levi''s Strauss', 'abc', 123.0</param>
+        ///// <param name="parmValues">object[] '1234',455,'Levi's','abc',123.0.  Notice changing from 2 single quotes to 1 quote </param>
+        //public static void ExtractLiteralParms(string parmString, ref object[] parmValues)
+        //{
+        //    int i = 0;
+        //    string s = parmString + ",";
+        //    int m = -1; // points to the first char of parm
+        //    int n = 0; // points to the last char of parm
+        //    int q = 0; // quote count
 
-            List<object> parms = new List<object>(5);
+        //    List<object> parms = new List<object>(5);
 
-            for (; i < s.Length; i++)
-            {
-                if (m == -1 && (s[i] >= 'A' && s[i] <= 'Z' || s[i] >= 'a' && s[i] <= 'z' || s[i] >= '0' && s[i] <= '9' || s[i] == '\'' || s[i] == '+' || s[i] == '-')) // legal first char
-                {
-                    m = i;
-                    if (s[i] == '\'') q++;  // a starting quote, thus ignore all chars 
-                }
-                else
-                {
-                    if (q == 0 && s[i] == ',') // delimiter
-                    {
-                        parms.Add(ConvertParm(s.Substring(m, i - m)));
-                        m = -1;
-                    }
-                    else
-                    {
-                        if (s[i] == '\'')
-                        {
-                            if (q > 0) q = 0; else q++;
-                        }
-                    }
-                }
-            }
-            parmValues = parms.ToArray();
-        }
+        //    for (; i < s.Length; i++)
+        //    {
+        //        if (m == -1 && (s[i] >= 'A' && s[i] <= 'Z' || s[i] >= 'a' && s[i] <= 'z' || s[i] >= '0' && s[i] <= '9' || s[i] == '\'' || s[i] == '+' || s[i] == '-')) // legal first char
+        //        {
+        //            m = i;
+        //            if (s[i] == '\'') q++;  // a starting quote, thus ignore all chars 
+        //        }
+        //        else
+        //        {
+        //            if (q == 0 && s[i] == ',') // delimiter
+        //            {
+        //                parms.Add(ConvertParm(s.Substring(m, i - m)));
+        //                m = -1;
+        //            }
+        //            else
+        //            {
+        //                if (s[i] == '\'')
+        //                {
+        //                    if (q > 0) q = 0; else q++;
+        //                }
+        //            }
+        //        }
+        //    }
+        //    parmValues = parms.ToArray();
+        //}
 
-        public static object ConvertParm(string s)
-        {
-            if (s == "false")
-            {
-                return false;
-            }
+        //public static object ConvertParm(string s)
+        //{
+        //    if (s == "false")
+        //    {
+        //        return false;
+        //    }
 
-            if (s.StartsWith("'"))
-            {
-                return s.Substring(1, s.Length - 2).Replace("''", "'");
-            }
-            else
-            {
-                if (s.IndexOf('.') > 0)
-                {
-                    return Utility.DecimalParse(s);
-                }
-                else
-                {
-                    if (s == string.Empty)
-                    {
-                        return null;
-                    }
-                    else
-                    {
-                        return Int32.Parse(s);
-                    }
-                }
-            }
-        }
+        //    if (s.StartsWith("'"))
+        //    {
+        //        return s.Substring(1, s.Length - 2).Replace("''", "'");
+        //    }
+        //    else
+        //    {
+        //        if (s.IndexOf('.') > 0)
+        //        {
+        //            return Utility.DecimalParse(s);
+        //        }
+        //        else
+        //        {
+        //            if (s == string.Empty)
+        //            {
+        //                return null;
+        //            }
+        //            else
+        //            {
+        //                return Int32.Parse(s);
+        //            }
+        //        }
+        //    }
+        //}
 
-        public static int GetMethodEndPosition(string stringWithMethod, int startingPosition)
-        {
-            int p = 0; // parenthesis count
-            int i = startingPosition;
-            for (; i < stringWithMethod.Length; i++)
-            {
-                if (stringWithMethod[i] == ')')
-                {
-                    if (--p == 0) break;
-                }
-                else
-                {
-                    if (stringWithMethod[i] == '(') p++;
-                }
-            }
-            return i;
-        }
+        //public static int GetMethodEndPosition(string stringWithMethod, int startingPosition)
+        //{
+        //    int p = 0; // parenthesis count
+        //    int i = startingPosition;
+        //    for (; i < stringWithMethod.Length; i++)
+        //    {
+        //        if (stringWithMethod[i] == ')')
+        //        {
+        //            if (--p == 0) break;
+        //        }
+        //        else
+        //        {
+        //            if (stringWithMethod[i] == '(') p++;
+        //        }
+        //    }
+        //    return i;
+        //}
         /// <summary>
         /// Splits parm string like this {PDC}='LSUS'|{BRAND}='LEVIS' into a dictionary of value pairs
         /// </summary>

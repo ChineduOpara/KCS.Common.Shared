@@ -8,43 +8,47 @@ namespace KCS.Common.Shared
     /// <summary>
     /// Indicates success or failure.
     /// </summary>
-    public class TimeStampEventArgs : GenericEventArgs<string>
+    public class TimeStampEventArgs : GenericEventArgs<DateTime>
     {
         /// <summary>
-        /// Contains the TImeStamp
+        /// Contains the TimeStamp
         /// </summary>
-        public DateTime TimeStamp { get; private set; }
+        public DateTime TimeStamp
+        {
+            get { return base.Data; }
+            private set { base.Data = value; }
+        }
 
-		public string Message
-		{
-			get { return base.Data; }
-		}
+        /// <summary>
+        /// Contains the message
+        /// </summary>
+        public string Message
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="success">Success value.</param>
-        public TimeStampEventArgs() : this(DateTime.Now)
+        public TimeStampEventArgs() : base(DateTime.Now)
         {
         }
 
 
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="success">Success value.</param>
-        public TimeStampEventArgs(DateTime timeStamp) : base("")
+        public TimeStampEventArgs(string message) : this()
         {
-            TimeStamp = timeStamp;
+            this.Message = message;
         }
 
 		/// <summary>
 		/// Constructor.
 		/// </summary>
 		/// <param name="success">Success value.</param>
-		public TimeStampEventArgs(DateTime timeStamp, string message) : this(timeStamp)
+		public TimeStampEventArgs(DateTime timeStamp, string message) : base(timeStamp)
 		{
-			base.Data = message;
+            this.Message = message;
 		}
     }
 }

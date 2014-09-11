@@ -6,7 +6,7 @@ using System.Text;
 namespace KCS.Common.Shared
 {
     /// <summary>
-    /// Indicates success or failure.
+    /// Numeric event arg with TimeStamp.
     /// </summary>
     public class NumericEventArgs : TimeStampEventArgs
     {
@@ -15,18 +15,23 @@ namespace KCS.Common.Shared
         /// </summary>
         public decimal Value { get; private set; }
 
-        public NumericEventArgs(decimal value) : this(value, "")
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="value">Value.</param>
+        public NumericEventArgs(decimal value) : base(DateTime.Now, string.Empty)
         {
+            this.Value = value;
         }
 
 		/// <summary>
-		/// Constructor.
+		/// Alternate constructor.
 		/// </summary>
-		/// <param name="success">Success value.</param>
+		/// <param name="value">Value.</param>
+		/// <param name="message">Message.</param>
         public NumericEventArgs(decimal value, string message) : base(DateTime.Now, message)
 		{
             this.Value = value;
-			base.Data = message;
 		}
     }
 }

@@ -1,0 +1,20 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="KCS.Common.Shared.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="MinimalHtmlDocument" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;title&gt;{title}&lt;/title&gt;
+    {styles}
+    {scripts}
+  &lt;/head&gt;
+  &lt;body&gt;
+{body}
+  &lt;/body&gt;
+&lt;/html&gt;</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

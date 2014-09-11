@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.IO;
+using System.Diagnostics;
 
 namespace KCS.Common.Shared
 {
@@ -23,6 +24,61 @@ namespace KCS.Common.Shared
 		{
 			return NetworkInterface.GetIsNetworkAvailable();
 		}
+
+        /// <summary>
+        /// Recycle local IIS.
+        /// </summary>
+        public static void RecycleIIS(string serverName = "localhost")
+        {
+            if (serverName.Equals("localhost", StringComparison.CurrentCultureIgnoreCase))
+            {
+                var info = new ProcessStartInfo("iisreset.exe", "/RESTART");
+                info.WindowStyle = ProcessWindowStyle.Normal;
+                info.CreateNoWindow = false;
+                var process = Process.Start(info);
+                process.WaitForExit();
+            }
+            else
+            {
+                throw new NotSupportedException("Non-local servers are not yet supported");
+            }
+        }
+
+        /// <summary>
+        /// Flush local DNS.
+        /// </summary>
+        public static void FlushDNS()
+        {
+            var info = new ProcessStartInfo("ipconfig.exe", "/release");
+            info.WindowStyle = ProcessWindowStyle.Normal;
+            info.CreateNoWindow = false;
+            var process = Process.Start(info);
+            process.WaitForExit();
+
+            info = new ProcessStartInfo("ipconfig.exe", "/renew");
+            info.WindowStyle = ProcessWindowStyle.Normal;
+            info.CreateNoWindow = false;
+            process = Process.Start(info);
+            process.WaitForExit();
+        }
+
+        public static int RestartService(string serviceName)
+        {
+            serviceName = Utility.GetStringValue(serviceName).Trim();
+
+            var info = new ProcessStartInfo("Net.exe", "stop " + serviceName);
+            info.WindowStyle = ProcessWindowStyle.Normal;
+            info.CreateNoWindow = false;
+            var process = Process.Start(info);
+            process.WaitForExit();
+
+            info = new ProcessStartInfo("Net.exe", "start " + serviceName);
+            info.WindowStyle = ProcessWindowStyle.Normal;
+            info.CreateNoWindow = false;
+            process = Process.Start(info);
+            process.WaitForExit();
+            return process.ExitCode;
+        }
 
 		/// <summary>
 		/// Checks to see if the target of a URL exists, using the default Request timeout.
@@ -72,7 +128,30 @@ namespace KCS.Common.Shared
             }
 		}
 
+        public class PostResponse
+        {
+            public Exception Exception { get; internal set; }
+            public string String { get; internal set; }
+        }
 
+        public static PostResponse Post(string uri, System.Collections.Specialized.NameValueCollection pairs)
+        {
+            byte[] rawData = null;
+            var response = new PostResponse();
+            try
+            {
+                using (WebClient client = new WebClient())
+                {
+                    rawData = client.UploadValues(uri, pairs);
+                }
+                response.String = System.Text.Encoding.UTF8.GetString(rawData);
+            }
+            catch (Exception ex)
+            {
+                response.Exception = ex;                
+            }
+            return response;
+        }
 
 		/// <summary>
 		/// Downloads any kind of file from the given URL, using the default timeout.

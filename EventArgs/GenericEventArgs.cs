@@ -29,5 +29,10 @@ namespace KCS.Common.Shared
 		{
 			this.Data = data;
 		}
+
+        public GenericEventArgs()
+        {
+            this.Data = default(T);
+        }
 	}
 }
