@@ -26,25 +26,6 @@ namespace KCS.Common.Shared
 		}
 
         /// <summary>
-        /// Recycle local IIS.
-        /// </summary>
-        public static void RecycleIIS(string serverName = "localhost")
-        {
-            if (serverName.Equals("localhost", StringComparison.CurrentCultureIgnoreCase))
-            {
-                var info = new ProcessStartInfo("iisreset.exe", "/RESTART");
-                info.WindowStyle = ProcessWindowStyle.Normal;
-                info.CreateNoWindow = false;
-                var process = Process.Start(info);
-                process.WaitForExit();
-            }
-            else
-            {
-                throw new NotSupportedException("Non-local servers are not yet supported");
-            }
-        }
-
-        /// <summary>
         /// Flush local DNS.
         /// </summary>
         public static void FlushDNS()

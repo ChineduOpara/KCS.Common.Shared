@@ -1,4 +1,5 @@
 ﻿using KCS.Common.Shared;
+using Microsoft.Web.Administration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,12 +15,27 @@ namespace KCS.Common.Shared
     {
         #region Events
         public event EventHandler<TimeStampEventArgs> Resetting;
-        public event EventHandler<TimeSpanEventArgs> Reseted;
+        public event EventHandler<TimeSpanEventArgs> Resetted;
         #endregion
-
+        
+        private List<string> _appPoolNames = new List<string>(1);
         private List<IISWebsiteBinding> _bindings = new List<IISWebsiteBinding>(1);
-        public string Name { get; set; }
 
+        /// <summary>
+        /// Website name, as shown in IIS.
+        /// </summary>
+        public string Name { get; internal set; }
+
+        /// <summary>
+        /// Physical path, as shown in IIS.
+        /// </summary>
+        public string PhysicalPath { get; internal set; }
+
+        /// <summary>
+        /// Index into the binding.
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
         public IISWebsiteBinding this[string uri]
         {
             get
@@ -29,13 +45,16 @@ namespace KCS.Common.Shared
             }
         }
 
+        /// <summary>
+        /// Gets all the bindings.
+        /// </summary>
         public IISWebsiteBinding[] Bindings
         {
             get { return _bindings.ToArray(); }
         }
 
         #region Event-raising methods
-        protected void OnCopyingConfigFiles()
+        protected void OnResetting()
         {
             if (Resetting != null)
             {
@@ -43,32 +62,121 @@ namespace KCS.Common.Shared
             }
         }
 
-        protected void OnCopiedConfigFiles(TimeSpan ts)
+        protected void OnResetted(TimeSpan ts)
         {
-            if (Reseted != null)
+            if (Resetted != null)
             {
-                Reseted(this, new TimeSpanEventArgs(ts));
+                Resetted(this, new TimeSpanEventArgs(ts));
             }
         }
         #endregion
 
-        public IISWebsite(string name)
+        /// <summary>
+        /// Constructor for blank website.
+        /// </summary>
+        /// <param name="name"></param>
+        public IISWebsite(string name, string physicalPath)
         {
             Name = name;
+            PhysicalPath = physicalPath;
         }
 
-        public IISWebsiteBinding AddWebsiteBinding(string uri, string ipAddress = "127.0.0.1")
+        /// <summary>
+        /// Constructor for a website that exists in IIS.
+        /// </summary>
+        /// <param name="site"></param>
+        public IISWebsite(Site site)
         {
-            var map = new IISWebsiteBinding(uri, ipAddress);
-            _bindings.Add(map);
-            return map;
+            Name = site.Name;
+            var applicationRoot = site.Applications.Where(a => a.Path == "/").Single();
+            var virtualRoot = applicationRoot.VirtualDirectories.Where(v => v.Path == "/").Single();
+            PhysicalPath = virtualRoot.PhysicalPath;
+
+            foreach (var app in site.Applications)
+            {
+                _appPoolNames.Add(app.ApplicationPoolName);
+            }
+
+            foreach (var binding in site.Bindings)
+            {
+                if (binding.EndPoint != null && !string.IsNullOrWhiteSpace(binding.Host))
+                {
+                    var urlBuilder = new UriBuilder(binding.Protocol, binding.Host, binding.EndPoint.Port);
+                    var newBinding = new IISWebsiteBinding(this, urlBuilder.Uri);
+                    _bindings.Add(newBinding);
+                }
+            }
         }
+
+        /// <summary>
+        /// Checks to see if this website is in IIS.
+        /// </summary>
+        /// <returns></returns>
+        public bool ValidateInIIS()
+        {
+            var site = IIS.ServerManager.Sites.FirstOrDefault(x => x.Name.Equals(this.Name, StringComparison.CurrentCultureIgnoreCase));
+            return site != null;
+        }
+
+        //public IISWebsiteBinding AddBinding(string uri, string ipAddress = "127.0.0.1")
+        //{
+        //    var bind = new IISWebsiteBinding(this, new Uri(uri));
+        //    bind.Uri = new Uri(uri);
+        //    _bindings.Add(bind);
+        //    return bind;
+        //}
 
         /// <summary>
         /// Resets the website in IIS.
         /// </summary>
         public void Reset()
         {
+            OnResetting();
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+
+            try
+            {
+                var site = IIS.ServerManager.Sites.FirstOrDefault(x => x.Name.Equals(this.Name, StringComparison.CurrentCultureIgnoreCase));
+                if (site != null)
+                {
+                    // Get all application pools
+                    var appPools = IIS.ServerManager.ApplicationPools;
+
+                    // Stop the website
+                    site.Stop();
+                    while (site.State != ObjectState.Stopped)
+                    {
+                        System.Threading.Thread.Sleep(1000);
+                    }
+
+                    // Recycle the matching application pools
+                    foreach (var appPoolName in _appPoolNames)
+                    {
+                        var appPoolMatch = appPools[appPoolName];
+                        if (appPoolMatch != null)
+                        {
+                            appPoolMatch.Recycle();
+                            while (appPoolMatch.State != ObjectState.Started)
+                            {
+                                System.Threading.Thread.Sleep(500);
+                            }
+                        }
+                    }
+
+                    // Restart the website
+                    site.Start();
+                    while (site.State == ObjectState.Started)
+                    {
+                        System.Threading.Thread.Sleep(1000);
+                    }
+                }
+            }
+            finally
+            {
+                stopwatch.Stop();
+                OnResetted(stopwatch.Elapsed);
+            }
         }
     }
 }

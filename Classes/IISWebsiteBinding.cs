@@ -9,28 +9,39 @@ namespace KCS.Common.Shared
 {
     public class IISWebsiteBinding
     {
+        public IISWebsite Site { get; private set; }
         public Uri Uri { get; set; }
         public IPAddress IPAddress { get; set; }
         public bool Enabled { get; set; }
-
+        public bool ValidateInWebsite { get; set; }
         /// <summary>
-        /// Constructor that defaults the target IP Address to localhost.
+        /// Any arbitrary string. It can be left blank.
         /// </summary>
-        /// <param name="uri"></param>
-        public IISWebsiteBinding(string uri) : this(uri, "127.0.0.1")
-        {
-        }
+        public string GroupName { get; set; }
 
-        /// <summary>
-        /// Constructor that allows ipAddress specification.
-        /// </summary>
-        /// <param name="uri"></param>
-        /// <param name="ipAddress"></param>
-        public IISWebsiteBinding(string uri, string ipAddress)
+        ///// <summary>
+        ///// Constructor that defaults the target IP Address to localhost.
+        ///// </summary>
+        ///// <param name="uri"></param>
+        //public IISWebsiteBinding(IISWebsite site, string uri, bool enabled = false, string groupName = "") : this(site, new IPAddress((new System.Text.ASCIIEncoding()).GetBytes("127.0.0.1")))
+        //{
+        //    this.GroupName = groupName;
+        //}
+
+        ///// <summary>
+        ///// Constructor that allows ipAddress specification.
+        ///// </summary>
+        ///// <param name="uri"></param>
+        ///// <param name="ipAddress"></param>
+        //public IISWebsiteBinding(IISWebsite site, string ipAddress) : this(site, )
+        //{
+        //}
+
+        public IISWebsiteBinding(IISWebsite site, Uri uri)
         {
-            var encoding = new System.Text.ASCIIEncoding();
-            Uri = new Uri(uri);
-            IPAddress = new IPAddress(encoding.GetBytes(ipAddress));
+            this.Site = site;
+            Uri = uri;
+            //IPAddress = ipAddress;
         }
     }
 }
