@@ -232,6 +232,22 @@ namespace KCS.Common.Shared
 			return string.Format("Error: ({0})", lngResult);
 		}
 
+        [DllImport("shell32.dll", CharSet = CharSet.Auto)]
+        static extern bool ShellExecuteEx(ref Win32API.Shell32.SHELLEXECUTEINFO lpExecInfo);
+
+        private const int SW_SHOW = 5;
+        private const uint SEE_MASK_INVOKEIDLIST = 12;
+        public static bool ShowFileProperties(string filePath)
+        {
+            var info = new Win32API.Shell32.SHELLEXECUTEINFO();
+            info.cbSize = System.Runtime.InteropServices.Marshal.SizeOf(info);
+            info.lpVerb = "properties";
+            info.lpFile = filePath;
+            info.nShow = SW_SHOW;
+            info.fMask = SEE_MASK_INVOKEIDLIST;
+            return ShellExecuteEx(ref info);
+        }
+
         /// <summary>
         /// Runs the command processor, passing parameters.
         /// </summary>
@@ -567,7 +583,7 @@ namespace KCS.Common.Shared
 			{
 				return string.Empty;
 			}
-		}
+		}        
 
 		#region Taken from http://msdn.microsoft.com/en-us/magazine/cc163851.aspx
 		public static void CopyFile(FileInfo source, FileInfo destination)

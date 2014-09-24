@@ -7,41 +7,34 @@ using System.Threading.Tasks;
 
 namespace KCS.Common.Shared
 {
-    public class IISWebsiteBinding
+    public class IISWebsiteBinding : DnsHostEntry
     {
+        private bool? _isInHostsFile;
+
         public IISWebsite Site { get; private set; }
-        public Uri Uri { get; set; }
-        public IPAddress IPAddress { get; set; }
-        public bool Enabled { get; set; }
-        public bool ValidateInWebsite { get; set; }
-        /// <summary>
-        /// Any arbitrary string. It can be left blank.
-        /// </summary>
-        public string GroupName { get; set; }
+        //public bool ValidateInWebsite { get; set; }
 
-        ///// <summary>
-        ///// Constructor that defaults the target IP Address to localhost.
-        ///// </summary>
-        ///// <param name="uri"></param>
-        //public IISWebsiteBinding(IISWebsite site, string uri, bool enabled = false, string groupName = "") : this(site, new IPAddress((new System.Text.ASCIIEncoding()).GetBytes("127.0.0.1")))
-        //{
-        //    this.GroupName = groupName;
-        //}
+        public bool IsSecure
+        {
+            get { return Uri.Scheme.Equals(System.Uri.UriSchemeHttps, StringComparison.CurrentCultureIgnoreCase); }
+        }
 
-        ///// <summary>
-        ///// Constructor that allows ipAddress specification.
-        ///// </summary>
-        ///// <param name="uri"></param>
-        ///// <param name="ipAddress"></param>
-        //public IISWebsiteBinding(IISWebsite site, string ipAddress) : this(site, )
-        //{
-        //}
+        public bool IsInHostsFile
+        {
+            get { return _isInHostsFile.Value; }
+        }
 
-        public IISWebsiteBinding(IISWebsite site, Uri uri)
+        public IISWebsiteBinding(IISWebsite site, Uri uri) : base(uri.DnsSafeHost)
         {
             this.Site = site;
             Uri = uri;
-            //IPAddress = ipAddress;
+
+            var match = IIS.DnsHostEntries.FirstOrDefault(x => x.Uri.Equals(this.Uri));
+            _isInHostsFile = match != null;
+            if (match != null)
+            {
+                Enabled = match.Enabled;
+            }
         }
     }
 }

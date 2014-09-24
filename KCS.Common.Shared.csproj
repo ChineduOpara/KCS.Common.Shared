@@ -117,10 +117,12 @@
     <Compile Include="API\IIS.cs" />
     <Compile Include="API\UnitedStates.cs" />
     <Compile Include="Attributes.cs" />
+    <Compile Include="Classes\DnsHostEntry.cs" />
     <Compile Include="Classes\DragDropObject.cs" />
     <Compile Include="Classes\DateRange.cs" />
     <Compile Include="Classes\GenericMessages.cs" />
     <Compile Include="Classes\Calendar.cs" />
+    <Compile Include="Classes\GetHostFileEntriesResult.cs" />
     <Compile Include="Classes\HtmlDocument.cs" />
     <Compile Include="Classes\IISWebsite.cs" />
     <Compile Include="Classes\IISWebsiteBinding.cs" />
