@@ -117,6 +117,8 @@
     <Compile Include="API\IIS.cs" />
     <Compile Include="API\UnitedStates.cs" />
     <Compile Include="Attributes.cs" />
+    <Compile Include="Classes\UpdateHostFileResult.cs" />
+    <Compile Include="Classes\UpdateIISWebsiteBindingsResult.cs" />
     <Compile Include="Classes\DnsHostEntry.cs" />
     <Compile Include="Classes\DragDropObject.cs" />
     <Compile Include="Classes\DateRange.cs" />
@@ -130,7 +132,7 @@
     <Compile Include="Encryption\RijndaelSimple.cs" />
     <Compile Include="Enumerations.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="EventArgs\NumericEventArgs.cs" />
+    <Compile Include="EventArgs\SetBusyEventArgs.cs" />
     <Compile Include="EventArgs\TimeSpanEventArgs.cs" />
     <Compile Include="EventArgs\UrlEventArgs.cs" />
     <Compile Include="EventArgs\LogMessageEventArgs.cs" />

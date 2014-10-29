@@ -102,7 +102,7 @@ namespace KCS.Common.Shared
                 if (binding.EndPoint != null && !string.IsNullOrWhiteSpace(binding.Host))
                 {
                     var urlBuilder = new UriBuilder(binding.Protocol, binding.Host, binding.EndPoint.Port);
-                    var newBinding = new IISWebsiteBinding(this, urlBuilder.Uri);
+                    var newBinding = new IISWebsiteBinding(urlBuilder.Uri, this);
                     _bindings.Add(newBinding);
                 }
             }
@@ -117,14 +117,6 @@ namespace KCS.Common.Shared
             var site = IIS.ServerManager.Sites.FirstOrDefault(x => x.Name.Equals(this.Name, StringComparison.CurrentCultureIgnoreCase));
             return site != null;
         }
-
-        //public IISWebsiteBinding AddBinding(string uri, string ipAddress = "127.0.0.1")
-        //{
-        //    var bind = new IISWebsiteBinding(this, new Uri(uri));
-        //    bind.Uri = new Uri(uri);
-        //    _bindings.Add(bind);
-        //    return bind;
-        //}
 
         /// <summary>
         /// Resets the website in IIS.

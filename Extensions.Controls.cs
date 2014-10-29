@@ -9,7 +9,7 @@ namespace KCS.Common.Shared
 {
     public static class ControlsExtensions
     {
-        public static Form GetForm(Type type)
+        public static Form FindOrOpenForm(Type type)
         {
             Form form = null;
             foreach (Form f in Application.OpenForms)
@@ -64,9 +64,9 @@ namespace KCS.Common.Shared
             return list;
         }
 
-        public static List<Control> GetControls(this Control parent, bool includeNested, List<Type> controlTypes)
+        public static List<Control> GetControls(this Control parent, bool includeNested, params Type[] controlTypes)
         {
-            return parent.GetControls(includeNested, controlTypes, new List<string>());
+            return parent.GetControls(includeNested, controlTypes.ToList(), new List<string>());
         }
 
         /// <summary>

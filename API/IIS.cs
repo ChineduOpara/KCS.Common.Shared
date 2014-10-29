@@ -14,7 +14,7 @@ namespace KCS.Common.Shared
     public static class IIS
     {
         private static List<IISWebsite> _sites;
-        private static List<DnsHostEntry> _dnsEntries;
+        private static DnsHostEntry[] _dnsEntries;
         private static object _lock = new object();
         private static ServerManager _serverManager;
         private static Regex _dnsHostEntryRowPattern = new Regex(@"^#?\s*"
@@ -43,7 +43,7 @@ namespace KCS.Common.Shared
         /// </summary>
         public static DnsHostEntry[] DnsHostEntries
         {
-            get { return _dnsEntries.ToArray(); }
+            get { return _dnsEntries; }
         }
 
         static IIS()
@@ -58,7 +58,7 @@ namespace KCS.Common.Shared
         {
             // Load host file entries
             var hostFileEntries = GetHostFileEntries();
-            _dnsEntries = hostFileEntries.Entries.ToList();
+            _dnsEntries = hostFileEntries.Entries.ToArray();
 
             // Load all websites from IIS
             _sites = ServerManager.Sites.Select(x => new IISWebsite(x)).ToList();
@@ -134,7 +134,8 @@ namespace KCS.Common.Shared
                 {
                     try
                     {
-                        entry = new DnsHostEntry(ipAddress, host);
+                        var ub = new UriBuilder(System.Uri.UriSchemeHttp.ToString(), host);
+                        entry = new DnsHostEntry(ub.Uri, ipAddress);
                         entry.Enabled = enabled;
                         entry.Comment = comment;
                         result.AddEntry(entry);
@@ -166,12 +167,202 @@ namespace KCS.Common.Shared
             {
                 return _sites.ToArray();
             }
-        }        
+        }
+
+        public static SaveIISWebsiteBindingsResult UpdateIISWebsiteBindings(IEnumerable<IISWebsiteBinding> bindings)
+        {
+            var results = new SaveIISWebsiteBindingsResult();
+            var bindingsToRemove = bindings.Where(x => x.IsDeleted).ToList(); // new List<Binding>();
+            var bindingsToAdd = bindings.Where(x => x.IsNew).ToList(); //new List<IISWebsiteBinding>();
+
+            // Skip all deleted items
+            //var bindingsPrivate = new List<IISWebsiteBinding>(bindings.Where(x => !x.IsDeleted));
+
+            // Get all relevant websites
+            var relevantWebsitesNames = bindings.Select(x => x.Site.Name).Distinct(); 
+
+            var matchingSites = ServerManager.Sites.Where(x => relevantWebsitesNames.Contains(x.Name));
+            foreach (var site in matchingSites)
+            {
+                //var matchingBindings = bindingsPrivate.Where(x => x.Site.Name.Equals(site.Name, StringComparison.CurrentCultureIgnoreCase));
+                //var matchingBindingsHostNames = matchingBindings.Select(x => x.Uri.DnsSafeHost);
+                //var deletedBindingsHostNames = matchingBindings.Where(x => x.IsDeleted).Select(x => x.Uri.DnsSafeHost);
+
+                //var currentSiteBindings = site.Bindings.Where(x => !string.IsNullOrWhiteSpace(x.Host));
+                //var currentSiteBindingsHostNames = currentSiteBindings.Select(x => x.Host);
+
+                //#region Remove bindings
+                //// Find the bindings that will be removed.                    
+                //foreach (var sb in currentSiteBindings)
+                //{
+                //    if (!matchingBindingsHostNames.Contains(sb.Host) || deletedBindingsHostNames.Contains(sb.Host))
+                //    {
+                //        bindingsToRemove.Add(sb);
+                //    }
+                //}
+
+                //// Remove bindings
+                //foreach (var sb in bindingsToRemove)
+                //{
+                //    try
+                //    {
+                //        site.Bindings.Remove(sb);                            
+                //        results.AddRemoved(sb);
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        results.AddException(sb, SaveIISWebsiteBindingsResult.BindingAction.Removing, ex);
+                //    }
+                //}
+                //#endregion
+
+                //#region Add bindings
+                //// Find the bindings that need to be added
+                //foreach (var b in matchingBindings)
+                //{
+                //    if (!currentSiteBindingsHostNames.Contains(b.Uri.DnsSafeHost))
+                //    {
+                //        bindingsToAdd.Add(b);
+                //    }
+                //}
+
+                //// Add new bindings
+                //foreach (var mb in bindingsToAdd)
+                //{
+                //    try
+                //    {
+                //        var protocol = mb.IsSecure ? System.Uri.UriSchemeHttps : System.Uri.UriSchemeHttp;
+                //        var sb = site.Bindings.Add(string.Format("*:{0}:{1}", mb.Uri.Port, mb.Uri.DnsSafeHost), protocol);
+                //        results.AddAdded(sb);
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        results.AddException(mb, SaveIISWebsiteBindingsResult.BindingAction.Adding, ex);
+                //    }
+                //}
+                //#endregion
+
+                #region Modify bindings port numbers
+                //foreach (var sb in currentSiteBindings)
+                //{
+                //    if (matchingBindingsHostNames.Contains(sb.Host) || !deletedBindingsHostNames.Contains(sb.Host))
+                //    {
+                //        var match = matchingBindings.FirstOrDefault(x => x.Uri.DnsSafeHost.Equals(sb.Host, StringComparison.CurrentCultureIgnoreCase));
+                //        if (match != null && match.Uri.Scheme == sb.Protocol)
+                //        {
+                //            if (sb.EndPoint.Port != match.Uri.Port)
+                //            {
+                //                try
+                //                {
+                //                    sb.BindingInformation = string.Format("*:{0}:{1}", match.Uri.Port, match.Uri.DnsSafeHost);
+                //                    results.AddUpdated(sb);
+                //                }
+                //                catch (Exception ex)
+                //                {
+                //                    results.AddException(sb, SaveIISWebsiteBindingsResult.BindingAction.Updating, ex);
+                //                }
+                //            }
+                //        }
+                //    }
+                //}
+                #endregion
+            }
+
+            // Commit all changes
+            try
+            {
+                ServerManager.CommitChanges();
+            }
+            catch (Exception ex)
+            {
+                results.AddException(ex);
+            }
+
+            return results;            
+        }
+
+        public static UpdateHostFileResult UpdateHostsFile(IEnumerable<IISWebsiteBinding> bindings, string hostsFilePath = @"C:\Windows\System32\drivers\etc\hosts")
+        {            
+            var backupFilePath = BackupHostsFile(hostsFilePath); ;
+
+            var result = new UpdateHostFileResult();
+
+            // Update the Result variable with all the numbers.
+            var entriesAdded = new List<IISWebsiteBinding>(bindings.Where(x => x.IsNew));
+            var entriesRemoved = new List<IISWebsiteBinding>(bindings.Where(x => x.IsDeleted));
+            var entriesUpdated = new List<IISWebsiteBinding>(bindings.Where(x => x.IsModified));
+            result.AddAdded(entriesAdded);
+            result.AddRemoved(entriesRemoved);
+            result.AddUpdated(entriesUpdated);
+
+            var sb = new StringBuilder();
+            sb.AppendLine(string.Format("# Created by ADH utility on {0}", DateTime.Now));
+            sb.AppendLine(string.Format("# Backup file is here: {0}", backupFilePath));
+            sb.AppendLine();
+
+            // Compile a unique list of DNS host entries, using a combination of those from the website bindings,
+            // and the existing ones from the Hosts file
+            var list = bindings.Union(DnsHostEntries).ToList();
+            
+            var grouping = list.Distinct(new DnsHostEntryEqualityComparer()).GroupBy(x => x.GroupName);
+
+            foreach (var group in grouping.OrderBy(x => x.Key))
+            {
+                var groupKey = group.Key;
+                sb.AppendLine("#" + groupKey);
+                sb.AppendLine("#");
+                foreach (var dnsEntry in group.OrderBy(x => x.DnsSafeDisplayString))
+                {
+                    sb.Append(dnsEntry.Enabled ? " " : "#");
+                    sb.Append(dnsEntry.IPAddress.ToString() + "    ");
+                    sb.Append(dnsEntry.DnsSafeDisplayString);
+
+                    if (!string.IsNullOrWhiteSpace(dnsEntry.Comment))
+                    {
+                        sb.AppendFormat(new string(' ', 20) + "# {0}", dnsEntry.Comment);
+                    }
+                    sb.AppendLine();
+                }
+                sb.AppendLine();
+            }
+
+            // Write the contents to the hosts file
+            try
+            {
+                File.WriteAllText(hostsFilePath, sb.ToString());
+            }
+            catch (Exception ex)
+            {
+                result.AddException(ex);
+            }
+
+            return result;
+        }
+
+        private static string BackupHostsFile(string hostsFilePath)
+        {
+            // Create filenames until a unique one is found.
+            var backupFilePath = string.Format("{0}_bak1", hostsFilePath);
+            int counter = 1;
+            bool backedUp = false;
+            do
+            {
+                backupFilePath = string.Format("{0}_bak{1}", hostsFilePath, counter++);
+                if (!File.Exists(backupFilePath))
+                {
+                    File.Copy(hostsFilePath, backupFilePath);
+                    backedUp = true;
+                }
+
+            } while (!backedUp);
+
+            return backupFilePath;
+        }
 
         /// <summary>
         /// Recycle local IIS.
         /// </summary>
-        public static void Recycle(string serverName = "localhost")
+        public static Process Recycle(bool waitForExit = true, string serverName = "localhost")
         {
             if (serverName.Equals("localhost", StringComparison.CurrentCultureIgnoreCase))
             {
@@ -179,7 +370,11 @@ namespace KCS.Common.Shared
                 info.WindowStyle = ProcessWindowStyle.Normal;
                 info.CreateNoWindow = false;
                 var process = Process.Start(info);
-                process.WaitForExit();
+                if (waitForExit)
+                {
+                    process.WaitForExit();
+                }
+                return process;
             }
             else
             {
