@@ -130,6 +130,9 @@ namespace KCS.Common.Shared
                 string comment = string.Empty;
                 bool hidden = false;
 
+                //ValuesTracker _valuesTracker;
+                //var dnsGroupNames = new Dictionary<Uri, string>();
+
                 enabled = line[0] != '#';
                 ipAddressString = match.Groups["ip"].Value.Trim();
                 hostNames = match.Groups["hosts"].Value.Trim();
@@ -166,6 +169,8 @@ namespace KCS.Common.Shared
                         entry.Comment = comment;
                         entry.IsInHostsFile = true;
                         result.AddEntry(entry);
+                        
+                        // TODO: Save the group names
                     }
                     catch (Exception ex)
                     {
@@ -308,7 +313,22 @@ namespace KCS.Common.Shared
         }
 
         public static UpdateHostFileResult UpdateHostsFile(IEnumerable<DnsHostEntry> entriesAdded, IEnumerable<DnsHostEntry> entriesDeleted, IEnumerable<DnsHostEntry> entriesModified, string hostsFilePath = @"C:\Windows\System32\drivers\etc\hosts")
-        {            
+        {
+            //// Save the group names
+            //foreach (var binding in entries.Where(x => !string.IsNullOrWhiteSpace(x.GroupName)))
+            //{
+            //    if (_dnsGroupNames.ContainsKey(binding.Uri))
+            //    {
+            //        _dnsGroupNames[binding.Uri] = binding.GroupName;
+            //    }
+            //    else
+            //    {
+            //        _dnsGroupNames.Add(binding.Uri, binding.GroupName);
+            //    }
+            //}
+            //_valuesTracker.AddValue(ValuesTrackerKeyName, _dnsGroupNames);
+            //_valuesTracker.Save();
+
             var backupFilePath = BackupHostsFile(hostsFilePath); ;
 
             var result = new UpdateHostFileResult();

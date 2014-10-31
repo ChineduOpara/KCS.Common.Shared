@@ -566,7 +566,29 @@ namespace KCS.Common.Shared
             }
             DataRow[] deletedRows = dt.Select("", "", DataViewRowState.Deleted);
             return deletedRows.Length > 0;
-        }        		
+        }
+
+        /// <summary>
+        /// Checks to see if any rows were added, changed or deleted.
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        public static bool IsChanged(this DataTable dt)
+        {
+            foreach (DataRow dr in dt.Select("", "", DataViewRowState.CurrentRows))
+            {
+                if (Utility.IsRowReallyChanged(dr))
+                    return true;
+            }
+            DataRow[] deletedRows = dt.Select("", "", DataViewRowState.Deleted);
+            if (deletedRows.Length > 0)
+            {
+                return true;
+            }
+
+            DataRow[] newRows = dt.Select("", "", DataViewRowState.Added);
+            return newRows.Length > 0;
+        }
 
 		/// <summary>
 		/// Gets the center of a Rect.
