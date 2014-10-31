@@ -127,7 +127,6 @@
     <Compile Include="Classes\GetHostFileEntriesResult.cs" />
     <Compile Include="Classes\HtmlDocument.cs" />
     <Compile Include="Classes\IISWebsite.cs" />
-    <Compile Include="Classes\IISWebsiteBinding.cs" />
     <Compile Include="Classes\MSExcel.cs" />
     <Compile Include="Encryption\RijndaelSimple.cs" />
     <Compile Include="Enumerations.cs" />

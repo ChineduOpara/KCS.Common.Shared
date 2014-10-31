@@ -3,6 +3,7 @@ using Microsoft.Web.Administration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,7 +20,7 @@ namespace KCS.Common.Shared
         #endregion
         
         private List<string> _appPoolNames = new List<string>(1);
-        private List<IISWebsiteBinding> _bindings = new List<IISWebsiteBinding>(1);
+        private List<DnsHostEntry> _bindings = new List<DnsHostEntry>(1);
 
         /// <summary>
         /// Website name, as shown in IIS.
@@ -36,7 +37,7 @@ namespace KCS.Common.Shared
         /// </summary>
         /// <param name="uri"></param>
         /// <returns></returns>
-        public IISWebsiteBinding this[string uri]
+        public DnsHostEntry this[string uri]
         {
             get
             {
@@ -48,7 +49,7 @@ namespace KCS.Common.Shared
         /// <summary>
         /// Gets all the bindings.
         /// </summary>
-        public IISWebsiteBinding[] Bindings
+        public DnsHostEntry[] Bindings
         {
             get { return _bindings.ToArray(); }
         }
@@ -102,8 +103,13 @@ namespace KCS.Common.Shared
                 if (binding.EndPoint != null && !string.IsNullOrWhiteSpace(binding.Host))
                 {
                     var urlBuilder = new UriBuilder(binding.Protocol, binding.Host, binding.EndPoint.Port);
-                    var newBinding = new IISWebsiteBinding(urlBuilder.Uri, this);
-                    _bindings.Add(newBinding);
+                    IPAddress address = binding.EndPoint.Address;
+                    if (address.Equals(DnsHostEntry.NoAddress))
+                    {
+                        address = DnsHostEntry.LocalHost;
+                    }
+                    var newBinding = new DnsHostEntry(urlBuilder.Uri, address);
+                    _bindings.Add(newBinding);                    
                 }
             }
         }

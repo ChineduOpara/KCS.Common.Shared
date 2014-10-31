@@ -70,9 +70,9 @@ namespace KCS.Common.Shared
             _exceptions.Add(newEx);
         }
 
-        public void AddException(IISWebsiteBinding binding, BindingAction action, Exception ex)
+        public void AddException(DnsHostEntry binding, BindingAction action, Exception ex)
         {
-            string message = string.Format("Error while {0} binding \"{1}\" to website \"{2}\"", action, binding.DnsSafeDisplayString, binding.Site.Name);
+            string message = string.Format("Error while {0} binding \"{1}\" to website \"{2}\"", action, binding.DnsSafeDisplayString, binding.Website.Name);
             var newEx = new Exception(message, ex);
             _exceptions.Add(newEx);
         }

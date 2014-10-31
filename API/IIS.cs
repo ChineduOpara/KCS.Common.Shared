@@ -46,6 +46,11 @@ namespace KCS.Common.Shared
             get { return _dnsEntries; }
         }
 
+        public static IISWebsite[] Websites
+        {
+            get { return _sites.ToArray(); }
+        }
+
         static IIS()
         {
             Load();
@@ -62,6 +67,27 @@ namespace KCS.Common.Shared
 
             // Load all websites from IIS
             _sites = ServerManager.Sites.Select(x => new IISWebsite(x)).ToList();
+
+            // Update the Website property of each DNS entry
+            foreach (var entry in _dnsEntries)
+            {
+                // Website
+                var query = from site in _sites
+                            from binding in site.Bindings
+                            where binding.Uri.DnsSafeHost.Equals(entry.Uri.DnsSafeHost, StringComparison.CurrentCultureIgnoreCase)
+                            select site;
+                entry.Website = query.FirstOrDefault();
+            }
+
+            // Update the IsInHostFile property of each website binding
+            foreach (var site in _sites)
+            {
+                foreach (var binding in site.Bindings)
+                {
+                    var match = _dnsEntries.FirstOrDefault(x => x.Uri.Equals(binding.Uri));
+                    binding.IsInHostsFile = match != null;
+                }
+            }
         }        
 
         /// <summary>
@@ -138,6 +164,7 @@ namespace KCS.Common.Shared
                         entry = new DnsHostEntry(ub.Uri, ipAddress);
                         entry.Enabled = enabled;
                         entry.Comment = comment;
+                        entry.IsInHostsFile = true;
                         result.AddEntry(entry);
                     }
                     catch (Exception ex)
@@ -169,20 +196,19 @@ namespace KCS.Common.Shared
             }
         }
 
-        public static SaveIISWebsiteBindingsResult UpdateIISWebsiteBindings(IEnumerable<IISWebsiteBinding> bindings)
+        public static SaveIISWebsiteBindingsResult UpdateIISWebsiteBindings(IEnumerable<DnsHostEntry> entriesAdded, IEnumerable<DnsHostEntry> entriesDeleted, IEnumerable<DnsHostEntry> entriesModified)
         {
             var results = new SaveIISWebsiteBindingsResult();
-            var bindingsToRemove = bindings.Where(x => x.IsDeleted).ToList(); // new List<Binding>();
-            var bindingsToAdd = bindings.Where(x => x.IsNew).ToList(); //new List<IISWebsiteBinding>();
 
             // Skip all deleted items
             //var bindingsPrivate = new List<IISWebsiteBinding>(bindings.Where(x => !x.IsDeleted));
 
             // Get all relevant websites
-            var relevantWebsitesNames = bindings.Select(x => x.Site.Name).Distinct(); 
+            //var relevantWebsitesNames = bindings.Select(x => x.Site.Name).Distinct(); 
+            //IEnumerable<IISWebsiteBinding> relevantWebsitesNames;
 
-            var matchingSites = ServerManager.Sites.Where(x => relevantWebsitesNames.Contains(x.Name));
-            foreach (var site in matchingSites)
+            //var matchingSites = ServerManager.Sites.Where(x => relevantWebsitesNames.Contains(x.Name));
+            //foreach (var site in matchingSites)
             {
                 //var matchingBindings = bindingsPrivate.Where(x => x.Site.Name.Equals(site.Name, StringComparison.CurrentCultureIgnoreCase));
                 //var matchingBindingsHostNames = matchingBindings.Select(x => x.Uri.DnsSafeHost);
@@ -281,29 +307,25 @@ namespace KCS.Common.Shared
             return results;            
         }
 
-        public static UpdateHostFileResult UpdateHostsFile(IEnumerable<IISWebsiteBinding> bindings, string hostsFilePath = @"C:\Windows\System32\drivers\etc\hosts")
+        public static UpdateHostFileResult UpdateHostsFile(IEnumerable<DnsHostEntry> entriesAdded, IEnumerable<DnsHostEntry> entriesDeleted, IEnumerable<DnsHostEntry> entriesModified, string hostsFilePath = @"C:\Windows\System32\drivers\etc\hosts")
         {            
             var backupFilePath = BackupHostsFile(hostsFilePath); ;
 
             var result = new UpdateHostFileResult();
 
             // Update the Result variable with all the numbers.
-            var entriesAdded = new List<IISWebsiteBinding>(bindings.Where(x => x.IsNew));
-            var entriesRemoved = new List<IISWebsiteBinding>(bindings.Where(x => x.IsDeleted));
-            var entriesUpdated = new List<IISWebsiteBinding>(bindings.Where(x => x.IsModified));
             result.AddAdded(entriesAdded);
-            result.AddRemoved(entriesRemoved);
-            result.AddUpdated(entriesUpdated);
+            result.AddDeleted(entriesDeleted);
+            result.AddModified(entriesModified);
 
             var sb = new StringBuilder();
             sb.AppendLine(string.Format("# Created by ADH utility on {0}", DateTime.Now));
             sb.AppendLine(string.Format("# Backup file is here: {0}", backupFilePath));
             sb.AppendLine();
 
-            // Compile a unique list of DNS host entries, using a combination of those from the website bindings,
-            // and the existing ones from the Hosts file
-            var list = bindings.Union(DnsHostEntries).ToList();
-            
+            // Compile a unique list of DNS host entries
+            List<DnsHostEntry> list = new List<DnsHostEntry>(entriesAdded);
+            list.AddRange(entriesModified);            
             var grouping = list.Distinct(new DnsHostEntryEqualityComparer()).GroupBy(x => x.GroupName);
 
             foreach (var group in grouping.OrderBy(x => x.Key))

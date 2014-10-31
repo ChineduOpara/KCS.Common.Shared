@@ -36,12 +36,12 @@ namespace KCS.Common.Shared
             _added.AddRange(entries);
         }
 
-        public void AddRemoved(IEnumerable<DnsHostEntry> entries)
+        public void AddDeleted(IEnumerable<DnsHostEntry> entries)
         {
             _removed.AddRange(entries);
         }
 
-        public void AddUpdated(IEnumerable<DnsHostEntry> entries)
+        public void AddModified(IEnumerable<DnsHostEntry> entries)
         {
             _updated.AddRange(entries);
         }
