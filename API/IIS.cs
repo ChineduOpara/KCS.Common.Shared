@@ -404,13 +404,17 @@ namespace KCS.Common.Shared
         /// <summary>
         /// Recycle local IIS.
         /// </summary>
-        public static Process Recycle(bool waitForExit = true, string serverName = "localhost")
+        public static Process Recycle(IntPtr windowHandle, bool waitForExit = true, string serverName = "localhost")
         {
             if (serverName.Equals("localhost", StringComparison.CurrentCultureIgnoreCase))
             {
                 var info = new ProcessStartInfo("iisreset.exe", "/RESTART");
                 info.WindowStyle = ProcessWindowStyle.Normal;
                 info.CreateNoWindow = false;
+                if (windowHandle != IntPtr.Zero)
+                {
+                    info.ErrorDialogParentHandle = windowHandle;
+                }
                 var process = Process.Start(info);
                 if (waitForExit)
                 {

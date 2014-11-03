@@ -28,7 +28,7 @@ namespace KCS.Common.Shared
         /// <summary>
         /// Flush local DNS.
         /// </summary>
-        public static void FlushDNS()
+        public static int FlushDNS(IntPtr windowHandle, bool waitForExit = true)
         {
             var info = new ProcessStartInfo("ipconfig.exe", "/release");
             info.WindowStyle = ProcessWindowStyle.Normal;
@@ -39,11 +39,22 @@ namespace KCS.Common.Shared
             info = new ProcessStartInfo("ipconfig.exe", "/renew");
             info.WindowStyle = ProcessWindowStyle.Normal;
             info.CreateNoWindow = false;
+            if (windowHandle != IntPtr.Zero)
+            {
+                info.ErrorDialogParentHandle = windowHandle;
+            }
+
             process = Process.Start(info);
-            process.WaitForExit();
+            if (waitForExit)
+            {
+                process.WaitForExit();
+                return process.ExitCode;
+            }
+
+            return 0;
         }
 
-        public static int RestartService(string serviceName)
+        public static int RestartService(IntPtr windowHandle, string serviceName, bool waitForExit = true)
         {
             serviceName = Utility.GetStringValue(serviceName).Trim();
 
@@ -56,9 +67,18 @@ namespace KCS.Common.Shared
             info = new ProcessStartInfo("Net.exe", "start " + serviceName);
             info.WindowStyle = ProcessWindowStyle.Normal;
             info.CreateNoWindow = false;
+            if (windowHandle != IntPtr.Zero)
+            {
+                info.ErrorDialogParentHandle = windowHandle;
+            }
+
             process = Process.Start(info);
-            process.WaitForExit();
-            return process.ExitCode;
+            if (waitForExit)
+            {
+                process.WaitForExit();
+                return process.ExitCode;
+            }
+            return 0;
         }
 
 		/// <summary>
