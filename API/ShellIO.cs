@@ -88,7 +88,7 @@ namespace KCS.Common.Shared
 		}
 
 		/// <summary>
-		/// Deletes a file.
+		/// Deletes files.
 		/// </summary>
 		/// <param name="form">Parent form.</param>
 		/// <param name="paths">Full paths to files or folders (no mixing and matching).</param>
@@ -452,7 +452,7 @@ namespace KCS.Common.Shared
 		/// </summary>
 		/// <param name="path">Directory path to check.</param>
 		/// <returns>True if the directory is writable are good.</returns>
-		static public Boolean ValidateDirectoryWritable(string path)
+		static public Boolean IsDirectoryWritable(string path)
 		{
 			FileStream stream = null;
 			try
