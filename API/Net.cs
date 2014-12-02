@@ -28,7 +28,7 @@ namespace KCS.Common.Shared
         /// <summary>
         /// Flush local DNS.
         /// </summary>
-        public static int FlushDNS(IntPtr windowHandle, bool waitForExit = true)
+        public static Process FlushDNS(IntPtr windowHandle, bool waitForExit = true)
         {
             var info = new ProcessStartInfo("ipconfig.exe", "/release");
             info.WindowStyle = ProcessWindowStyle.Normal;
@@ -48,13 +48,12 @@ namespace KCS.Common.Shared
             if (waitForExit)
             {
                 process.WaitForExit();
-                return process.ExitCode;
             }
 
-            return 0;
+            return process;
         }
 
-        public static int RestartService(IntPtr windowHandle, string serviceName, bool waitForExit = true)
+        public static Process RestartService(IntPtr windowHandle, string serviceName, bool waitForExit = true)
         {
             serviceName = Utility.GetStringValue(serviceName).Trim();
 
@@ -76,9 +75,8 @@ namespace KCS.Common.Shared
             if (waitForExit)
             {
                 process.WaitForExit();
-                return process.ExitCode;
             }
-            return 0;
+            return process;
         }
 
 		/// <summary>
