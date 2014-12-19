@@ -50,6 +50,11 @@ namespace KCS.Common.Shared
 
         public bool IsInHostsFile  { get; internal set; }
 
+        public virtual bool IsLocationSynced
+        {
+            get { return IsInIIS && IsInHostsFile; }
+        }
+
         /// <summary>
         /// Any arbitrary string. It can be left blank.
         /// </summary>

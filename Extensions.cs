@@ -1484,35 +1484,41 @@ namespace KCS.Common.Shared
         /// </summary>
         /// <param name="date"></param>
         /// <returns></returns>
-        public static string ToCommonString(this DateTime date)
+        public static string ToCommonString(this DateTime date, bool includeTime = false)
         {
+            string displayString = date.ToString("D");
             if (date.Date == DateTime.Today.Date)
             {
-                return "Today";
+                displayString = "Today";
             }
 
             if (date.Date == DateTime.Today.Date.AddDays(-1))
             {
-                return "Yesterday";
+                displayString = "Yesterday";
             }
 
             if (date.Date == DateTime.Today.Date.AddDays(1))
             {
-                return "Tomorrow";
+                displayString = "Tomorrow";
             }
 
-            return date.ToString("D");
+            if (includeTime)
+            {
+                displayString = string.Format("{0} @ {1:t}", displayString, date);
+            }
+
+            return displayString;
         }
 
         /// <summary>
         /// A short string representation of a date.
         /// </summary>
         /// <returns></returns>
-        public static string ToShortString(this DateRange date, bool includeDate = true)
+        public static string ToShortString(this DateRange date, bool includeTime = true)
         {
             bool sameDay = date.Start.Date == date.End.Date;
 
-            if (includeDate)
+            if (includeTime)
             {
                 if (sameDay)
                 {
