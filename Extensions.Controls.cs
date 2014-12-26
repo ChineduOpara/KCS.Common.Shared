@@ -9,7 +9,7 @@ namespace KCS.Common.Shared
 {
     public static class ControlsExtensions
     {
-        public static Form FindOrOpenForm(Type type)
+        public static Form FindOrRestoreForm(Type type)
         {
             Form form = null;
             foreach (Form f in Application.OpenForms)
