@@ -128,6 +128,7 @@
     <Compile Include="Classes\HtmlDocument.cs" />
     <Compile Include="Classes\IISWebsite.cs" />
     <Compile Include="Classes\MSExcel.cs" />
+    <Compile Include="Delegates\DefaultDelegate.cs" />
     <Compile Include="Encryption\RijndaelSimple.cs" />
     <Compile Include="Enumerations.cs" />
     <Compile Include="Constants.cs" />

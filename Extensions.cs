@@ -829,12 +829,6 @@ namespace KCS.Common.Shared
             uint counter = 0;
 			foreach (KeyValuePair<string, Type> pair in columns)
 			{
-                //if (!dt.Columns.Contains(pair.Key.ToUpper()))
-                //{
-                //    dt.Columns.Add(pair.Key.ToUpper(), pair.Value);
-                //    counter++;
-                //}
-
                 if (!dt.Columns.Contains(pair.Key))
                 {
                     dt.Columns.Add(pair.Key, pair.Value);
