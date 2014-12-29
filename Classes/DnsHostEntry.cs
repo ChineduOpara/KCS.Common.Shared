@@ -28,11 +28,94 @@ namespace KCS.Common.Shared
         public static IPAddress LocalHost = IPAddress.Parse("127.0.0.1");
         public static IPAddress NoAddress = IPAddress.Parse("0.0.0.0");
 
-        public Uri Uri { get; set; }
-        public IPAddress IPAddress { get; set; }
-        public bool Enabled { get; set; }
-        public string Comment { get; set; }
+        private string _comment = string.Empty;
+        private string _groupName = string.Empty;
+        private Uri _uri;
+        private IPAddress _ipAddress;
+        private bool _enabled = false;
         
+        #region Properties
+        public bool IsDirty {get; private set;}
+
+        public Uri Uri
+        {
+            get { return _uri; }
+            set
+            {
+                if (value != _uri)
+                {
+                    _uri = value;
+                    IsDirty = true;
+                }
+            }
+        }
+
+        public IPAddress IPAddress
+        {
+            get { return _ipAddress; }
+            set
+            {
+                if (value != _ipAddress)
+                {
+                    _ipAddress = value;
+                    IsDirty = true;
+                }
+            }
+        }
+        
+        public bool Enabled
+        {
+            get {return _enabled;}
+            set
+            {
+                if (value != _enabled)
+                {
+                    _enabled = value;
+                    IsDirty = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Any arbitrary comment.
+        /// </summary>
+        public string Comment
+        {
+            get { return _comment; }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    value = string.Empty;
+                }
+                if (string.Compare(_comment, value, true) != 0)
+                {
+                    _comment = value;
+                    IsDirty = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Any arbitrary group name.
+        /// </summary>
+        public string GroupName
+        {
+            get { return _groupName; }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    value = string.Empty;
+                }
+                if (string.Compare(_groupName, value, true) != 0)
+                {
+                    _groupName = value;
+                    IsDirty = true;
+                }
+            }
+        }
+
         /// <summary>
         /// If this is set, then this entry corresponds with an existing binding in IIS.
         /// </summary>
@@ -53,12 +136,7 @@ namespace KCS.Common.Shared
         public virtual bool IsLocationSynced
         {
             get { return IsInIIS && IsInHostsFile; }
-        }
-
-        /// <summary>
-        /// Any arbitrary string. It can be left blank.
-        /// </summary>
-        public string GroupName { get; set; }
+        }        
 
         public virtual string DnsSafeDisplayString
         {
@@ -72,20 +150,41 @@ namespace KCS.Common.Shared
                 return format;
             }
         }
+        #endregion
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="ipAddress"></param>
         public DnsHostEntry(Uri uri, IPAddress ipAddress) : this(uri)
         {
             IPAddress = ipAddress;
+            IsDirty = false;
         }
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="uri"></param>
         public DnsHostEntry(Uri uri)
         {
             Uri = uri;
+            IsDirty = false;
         }
 
+        /// <summary>
+        /// String representation.
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return string.Format("{0} -> {1}", Uri.ToString(), IPAddress);
+        }
+
+        internal void ResetDirty()
+        {
+            IsDirty = false;
         }
 
         public void SetLocationFlags()

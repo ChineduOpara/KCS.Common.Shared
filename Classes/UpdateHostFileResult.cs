@@ -31,19 +31,19 @@ namespace KCS.Common.Shared
             _exceptions = new List<Exception>();
         }
 
-        public void AddAdded(IEnumerable<DnsHostEntry> entries)
+        public void AddAdded(DnsHostEntry entry)
         {
-            _added.AddRange(entries);
+            _added.Add(entry);
         }
 
-        public void AddDeleted(IEnumerable<DnsHostEntry> entries)
+        public void AddDeleted(DnsHostEntry entry)
         {
-            _removed.AddRange(entries);
+            _removed.Add(entry);
         }
 
-        public void AddModified(IEnumerable<DnsHostEntry> entries)
+        public void AddModified(DnsHostEntry entry)
         {
-            _updated.AddRange(entries);
+            _updated.Add(entry);
         }
 
         public void AddException(Exception ex)

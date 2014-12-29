@@ -13,8 +13,9 @@ namespace KCS.Common.Shared
 {
     public static class IIS
     {
+        private const string DefaultHostFilePath = @"C:\Windows\System32\drivers\etc\hosts";
         private static List<IISWebsite> _sites;
-        private static DnsHostEntry[] _dnsEntries;
+        private static List<DnsHostEntry> _dnsEntries;
         private static object _lock = new object();
         private static ServerManager _serverManager;
         private static Regex _dnsHostEntryRowPattern = new Regex(@"^#?\s*"
@@ -43,7 +44,7 @@ namespace KCS.Common.Shared
         /// </summary>
         public static DnsHostEntry[] DnsHostEntries
         {
-            get { return _dnsEntries; }
+            get { return _dnsEntries.ToArray(); }
         }
 
         public static IISWebsite[] Websites
@@ -63,7 +64,7 @@ namespace KCS.Common.Shared
         {
             // Load host file entries
             var hostFileEntries = GetHostFileEntries();
-            _dnsEntries = hostFileEntries.Entries.ToArray();
+            _dnsEntries = hostFileEntries.Entries.ToList();
 
             // Load all websites from IIS
             _sites = ServerManager.Sites.Select(x => new IISWebsite(x)).ToList();
@@ -312,8 +313,46 @@ namespace KCS.Common.Shared
             return results;            
         }
 
-        public static UpdateHostFileResult UpdateHostsFile(IEnumerable<DnsHostEntry> entriesAdded, IEnumerable<DnsHostEntry> entriesDeleted, IEnumerable<DnsHostEntry> entriesModified, string hostsFilePath = @"C:\Windows\System32\drivers\etc\hosts")
+        public static UpdateHostFileResult UpdateHostsFile(IEnumerable<DnsHostEntry> entriesToAdd = null, IEnumerable<DnsHostEntry> entriesToDelete = null, string hostsFilePath = null)
         {
+            var result = new UpdateHostFileResult();
+
+            // Process deleted rows
+            if (entriesToDelete != null)
+            {
+                foreach (var entry in entriesToDelete)
+                {
+                    if (_dnsEntries.Contains(entry))
+                    {
+                        result.AddDeleted(entry);
+                        _dnsEntries.Remove(entry);
+                    }
+                }
+            }
+
+            // Process added rows
+            if (entriesToAdd != null)
+            {
+                foreach (var entry in entriesToAdd)
+                {
+                    if (!_dnsEntries.Contains(entry))
+                    {                        
+                        _dnsEntries.Add(entry);
+                        result.AddAdded(entry);
+                    }
+                }
+            }
+
+            // Process the modified added rows.
+            foreach (var entry in _dnsEntries)
+            {
+                // Process modified rows
+                if (entry.IsDirty)
+                {
+                    result.AddModified(entry);
+                }
+            }
+
             //// Save the group names
             //foreach (var binding in entries.Where(x => !string.IsNullOrWhiteSpace(x.GroupName)))
             //{
@@ -329,25 +368,35 @@ namespace KCS.Common.Shared
             //_valuesTracker.AddValue(ValuesTrackerKeyName, _dnsGroupNames);
             //_valuesTracker.Save();
 
-            var backupFilePath = BackupHostsFile(hostsFilePath); ;
+            WriteDnsEntries(hostsFilePath);
 
-            var result = new UpdateHostFileResult();
+            _dnsEntries.ForEach(x => x.ResetDirty());
 
-            // Update the Result variable with all the numbers.
-            result.AddAdded(entriesAdded);
-            result.AddDeleted(entriesDeleted);
-            result.AddModified(entriesModified);
+            return result;
+        }
+
+        /// <summary>
+        /// Group the list for and output to file
+        /// </summary>
+        /// <param name="entries"></param>
+        private static Exception WriteDnsEntries(string hostsFilePath)
+        {
+            // Make sure the hosts file is valid
+            if (string.IsNullOrWhiteSpace(hostsFilePath) || !File.Exists(hostsFilePath))
+            {
+                hostsFilePath = DefaultHostFilePath;
+            }
+
+            // Back the file up.
+            var backupFilePath = BackupHostsFile(hostsFilePath);
 
             var sb = new StringBuilder();
             sb.AppendLine(string.Format("# Created by ADH utility on {0}", DateTime.Now));
             sb.AppendLine(string.Format("# Backup file is here: {0}", backupFilePath));
             sb.AppendLine();
 
-            // Compile a unique list of DNS host entries
-            List<DnsHostEntry> list = new List<DnsHostEntry>(entriesAdded);
-            list.AddRange(entriesModified);            
-            var grouping = list.Distinct(new DnsHostEntryEqualityComparer()).GroupBy(x => x.GroupName);
-
+            var eq = new DnsHostEntryEqualityComparer();            
+            var grouping = _dnsEntries.Distinct(eq).GroupBy(x => x.GroupName);
             foreach (var group in grouping.OrderBy(x => x.Key))
             {
                 var groupKey = group.Key;
@@ -372,13 +421,12 @@ namespace KCS.Common.Shared
             try
             {
                 File.WriteAllText(hostsFilePath, sb.ToString());
+                return null;
             }
             catch (Exception ex)
             {
-                result.AddException(ex);
+                return ex;
             }
-
-            return result;
         }
 
         private static string BackupHostsFile(string hostsFilePath)
