@@ -396,11 +396,11 @@ namespace KCS.Common.Shared
             return list;
         }
 
-        public static string GetAllExceptionsString(this Exception ex)
+        public static string GetAllExceptionsString(this Exception ex, string delimiter = "\r\n\r\n")
         {
             var list = ex.GetAllExceptions();
             var messages = list.Select(x => x.Message).ToArray();
-            var values = string.Join("\r\n\r\n", messages);
+            var values = string.Join(delimiter, messages);
 
             return values;
         }
