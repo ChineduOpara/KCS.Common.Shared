@@ -9,5 +9,6 @@ namespace KCS.Common.Shared
     public class Delegates
     {
         public delegate void Default();
+        public delegate bool DefaultReturnBoolean();
     }
 }

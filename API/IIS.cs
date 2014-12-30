@@ -13,6 +13,8 @@ namespace KCS.Common.Shared
 {
     public static class IIS
     {
+        private static string _valuesTrackerKey;
+        private const string HostEntryGroupNames = "HostEntryGroupNames";
         private const string DefaultHostFilePath = @"C:\Windows\System32\drivers\etc\hosts";
         private static List<IISWebsite> _sites;
         private static List<DnsHostEntry> _dnsEntries;
@@ -24,6 +26,7 @@ namespace KCS.Common.Shared
                 + @"(?:#\s*(?<comment>.*?)\s*)?$",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
 
+        #region Properties
         public static ServerManager ServerManager
         {
             get
@@ -51,9 +54,14 @@ namespace KCS.Common.Shared
         {
             get { return _sites.ToArray(); }
         }
+        #endregion
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         static IIS()
         {
+            _valuesTrackerKey = Environment.UserName + "-IIS";
             Load();
         }
 
@@ -351,22 +359,7 @@ namespace KCS.Common.Shared
                 {
                     result.AddModified(entry);
                 }
-            }
-
-            //// Save the group names
-            //foreach (var binding in entries.Where(x => !string.IsNullOrWhiteSpace(x.GroupName)))
-            //{
-            //    if (_dnsGroupNames.ContainsKey(binding.Uri))
-            //    {
-            //        _dnsGroupNames[binding.Uri] = binding.GroupName;
-            //    }
-            //    else
-            //    {
-            //        _dnsGroupNames.Add(binding.Uri, binding.GroupName);
-            //    }
-            //}
-            //_valuesTracker.AddValue(ValuesTrackerKeyName, _dnsGroupNames);
-            //_valuesTracker.Save();
+            }            
 
             WriteDnsEntries(hostsFilePath);
 
@@ -376,11 +369,13 @@ namespace KCS.Common.Shared
         }
 
         /// <summary>
-        /// Group the list for and output to file
+        /// Group the list and output to file.
         /// </summary>
         /// <param name="entries"></param>
         private static Exception WriteDnsEntries(string hostsFilePath)
         {
+            Exception exception = null;
+
             // Make sure the hosts file is valid
             if (string.IsNullOrWhiteSpace(hostsFilePath) || !File.Exists(hostsFilePath))
             {
@@ -421,12 +416,33 @@ namespace KCS.Common.Shared
             try
             {
                 File.WriteAllText(hostsFilePath, sb.ToString());
-                return null;
             }
             catch (Exception ex)
             {
-                return ex;
+                exception = ex;
             }
+
+            // Save the group names
+            if (exception == null)
+            {
+                var vt = new ValuesTracker(_valuesTrackerKey);
+                var groupNames = new Dictionary<string, string>();
+                foreach (var binding in _dnsEntries.Where(x => !string.IsNullOrWhiteSpace(x.GroupName)))
+                {
+                    if (groupNames.ContainsKey(binding.ToString()))
+                    {
+                        groupNames[binding.ToString()] = binding.GroupName;
+                    }
+                    else
+                    {
+                        groupNames.Add(binding.ToString(), binding.GroupName);
+                    }
+                }
+                vt.AddValue(HostEntryGroupNames, groupNames);
+                vt.Save();
+            }
+
+            return exception;
         }
 
         private static string BackupHostsFile(string hostsFilePath)

@@ -13,11 +13,7 @@ namespace KCS.Common.Shared
 	/// </summary>
 	public static class Strings
 	{
-        //public static string StripInvalidXmlChars(string text)
-        //{
-        //    string re = @"[^\x09\x0A\x0D\x20-\xD7FF\xE000-\xFFFD\x10000-x10FFFF]";
-        //    return Regex.Replace(text, re, "");
-        //}   
+        public static Regex AlphanumericRegex = new Regex("^[a-zA-Z0-9]*$");
 
         public static string StripInvalidXmlChars(string text)
         {
@@ -209,22 +205,27 @@ namespace KCS.Common.Shared
         /// <summary>
         /// Checks to see if an object is a number of any kind.
         /// </summary>
-        /// <param name="ObjectToTest"></param>
+        /// <param name="data"></param>
         /// <returns></returns>
-        public static bool IsNumeric(object ObjectToTest)
+        public static bool IsNumeric(object data)
         {
-            if (ObjectToTest == null)
+            if (data == null)
             {
                 return false;
             }
             else
             {
                 double OutValue;
-                return double.TryParse(ObjectToTest.ToString().Trim(),
+                return double.TryParse(data.ToString().Trim(),
                     System.Globalization.NumberStyles.Any,
                     System.Globalization.CultureInfo.CurrentCulture,
                     out OutValue);
             }
+        }
+
+        public static bool IsAlphaNumericOnly(string @string)
+        {
+            return AlphanumericRegex.IsMatch(@string);
         }
 
         /// <summary>
