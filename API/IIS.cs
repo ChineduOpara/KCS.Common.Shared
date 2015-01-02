@@ -73,6 +73,7 @@ namespace KCS.Common.Shared
             // Load host file entries
             var hostFileEntries = GetHostFileEntries();
             _dnsEntries = hostFileEntries.Entries.ToList();
+            LoadDnsEntryGroupNames();
 
             // Load all websites from IIS
             _sites = ServerManager.Sites.Select(x => new IISWebsite(x)).ToList();
@@ -138,9 +139,6 @@ namespace KCS.Common.Shared
                 string hostNames = string.Empty;
                 string comment = string.Empty;
                 bool hidden = false;
-
-                //ValuesTracker _valuesTracker;
-                //var dnsGroupNames = new Dictionary<Uri, string>();
 
                 enabled = line[0] != '#';
                 ipAddressString = match.Groups["ip"].Value.Trim();
@@ -351,10 +349,9 @@ namespace KCS.Common.Shared
                 }
             }
 
-            // Process the modified added rows.
+            // Process the modified rows
             foreach (var entry in _dnsEntries)
             {
-                // Process modified rows
                 if (entry.IsDirty)
                 {
                     result.AddModified(entry);
@@ -425,24 +422,46 @@ namespace KCS.Common.Shared
             // Save the group names
             if (exception == null)
             {
-                var vt = new ValuesTracker(_valuesTrackerKey);
-                var groupNames = new Dictionary<string, string>();
-                foreach (var binding in _dnsEntries.Where(x => !string.IsNullOrWhiteSpace(x.GroupName)))
-                {
-                    if (groupNames.ContainsKey(binding.ToString()))
-                    {
-                        groupNames[binding.ToString()] = binding.GroupName;
-                    }
-                    else
-                    {
-                        groupNames.Add(binding.ToString(), binding.GroupName);
-                    }
-                }
-                vt.AddValue(HostEntryGroupNames, groupNames);
-                vt.Save();
+                SaveDnsEntryGroupNames();    
             }
 
             return exception;
+        }
+
+        private static void SaveDnsEntryGroupNames()
+        {
+            var vt = new ValuesTracker(_valuesTrackerKey);
+            var groupNames = new Dictionary<string, string>();
+            foreach (var entry in _dnsEntries.Where(x => !string.IsNullOrWhiteSpace(x.GroupName)))
+            {
+                if (groupNames.ContainsKey(entry.ToString()))
+                {
+                    groupNames[entry.ToString()] = entry.GroupName;
+                }
+                else
+                {
+                    groupNames.Add(entry.ToString(), entry.GroupName);
+                }
+            }
+            vt.AddValue(HostEntryGroupNames, groupNames);
+            vt.Save();
+        }
+
+        private static void LoadDnsEntryGroupNames()
+        {
+            var emptyGroupNames = new Dictionary<string, string>();
+            var vt = new ValuesTracker(_valuesTrackerKey);
+            vt.Load();
+            var groupNames = vt.GetValue(HostEntryGroupNames, emptyGroupNames);
+
+            foreach (var entry in _dnsEntries)
+            {
+                var key = entry.ToString();
+                if (groupNames.ContainsKey(key))
+                {
+                    entry.GroupName = groupNames[key];
+                }
+            }
         }
 
         private static string BackupHostsFile(string hostsFilePath)
