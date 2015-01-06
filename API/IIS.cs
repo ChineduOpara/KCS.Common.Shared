@@ -89,15 +89,8 @@ namespace KCS.Common.Shared
                 entry.Website = query.FirstOrDefault();
             }
 
-            // Update the IsInHostFile property of each website binding
-            foreach (var site in _sites)
-            {
-                foreach (var binding in site.Bindings)
-                {
-                    var match = _dnsEntries.FirstOrDefault(x => x.Uri.Equals(binding.Uri));
-                    binding.IsInHostsFile = match != null;
-                }
-            }
+            // Set location flags of each website binding
+            _dnsEntries.ForEach(x => x.SetLocationFlags());
         }        
 
         /// <summary>
@@ -195,17 +188,9 @@ namespace KCS.Common.Shared
         /// </summary>
         /// <param name="wwwRoot">Root directory.</param>
         /// <returns>Array if IISWebsites</returns>
-        public static IISWebsite[] GetWebsites(string wwwRoot = "")
+        public static IEnumerable<IISWebsite> GetWebsites(string wwwRoot)
         {       
-            bool filterByDirectoryMapping = !string.IsNullOrWhiteSpace(wwwRoot);
-            if (filterByDirectoryMapping)
-            {
-                return _sites.Where(x => x.PhysicalPath.Equals(wwwRoot, StringComparison.CurrentCultureIgnoreCase)).ToArray();
-            }
-            else
-            {
-                return _sites.ToArray();
-            }
+            return _sites.Where(x => x.PhysicalPath.Equals(wwwRoot, StringComparison.CurrentCultureIgnoreCase));
         }
 
         public static SaveIISWebsiteBindingsResult UpdateIISWebsiteBindings(IEnumerable<DnsHostEntry> entriesAdded, IEnumerable<DnsHostEntry> entriesDeleted, IEnumerable<DnsHostEntry> entriesModified)

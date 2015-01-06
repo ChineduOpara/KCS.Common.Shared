@@ -12,7 +12,7 @@ namespace KCS.Common.Shared
     /// <summary>
     /// Represents a websiote
     /// </summary>
-    public class IISWebsite : IComparable<IISWebsite>
+    public class IISWebsite : IComparable<IISWebsite>, IEquatable<IISWebsite>
     {
         #region Events
         public event EventHandler<TimeStampEventArgs> Resetting;
@@ -190,6 +190,11 @@ namespace KCS.Common.Shared
         public int CompareTo(IISWebsite other)
         {
             return string.Compare(this.Name, other.Name, true);
+        }
+
+        public bool Equals(IISWebsite other)
+        {
+            return this.Name.Equals(other.Name, StringComparison.CurrentCultureIgnoreCase);
         }
     }
 }
