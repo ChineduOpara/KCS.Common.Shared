@@ -9,8 +9,8 @@ namespace KCS.Common.Shared
 	/// </summary>
 	public struct Win32API
 	{
-        //[DllImport("winmm.dll")]
-        //private static extern long mciSendString(string strCommand, StringBuilder strReturn, int iReturnLength, IntPtr hwndCallback);
+        [DllImport("Kernel32.dll", EntryPoint = "RtlZeroMemory", SetLastError = false)]
+        public static extern void ZeroMemory(IntPtr dest, IntPtr size);
 
         //public void PlayFile(string path)
         //{
@@ -315,6 +315,7 @@ namespace KCS.Common.Shared
 			internal const int FOF_ALLOWUNDO = 0x40;
 			internal const int FOF_NOCONFIRMATION = 0x10; //Don't prompt the user.;
 			internal const int FOF_SIMPLEPROGRESS = 0x100;
+            internal const int FOF_NOERRORUI = 0x0400;
 			#endregion
 
 			#region Constants for SHGetFileInfo
@@ -339,7 +340,7 @@ namespace KCS.Common.Shared
 			/// <summary>
 			/// SHFILEOPSTRUCT
 			/// </summary>
-			[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 1)]
+			[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
 			internal struct SHFILEOPSTRUCT
 			{
 				/// <summary>
@@ -520,7 +521,8 @@ namespace KCS.Common.Shared
 			/// </summary>
 			/// <param name="lpFileOp">Pointer to SHFILEOPSTRUCT structure.</param>
 			/// <returns>Error code.</returns>
-			[DllImport("shell32.dll", CharSet = CharSet.Auto)]
+            [DllImport("shell32.dll", CharSet = CharSet.Auto)]
+            //[StructLayout(LayoutKind.Sequential)]
 			internal static extern int SHFileOperation(ref SHFILEOPSTRUCT lpFileOp);
 
 			[DllImport("Shell32.dll", CharSet = CharSet.Auto)]

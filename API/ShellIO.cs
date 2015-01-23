@@ -59,27 +59,30 @@ namespace KCS.Common.Shared
 		/// <param name="source">Source path.</param>
 		/// <param name="destination">Destination path.</param>
 		/// <param name="aborted">Was the operation aborted?</param>
-		public static void CopyFile(Form form, string source, string destination, ref bool aborted)
+		public static void CopyFileOrDirectory(Form form, string source, string destination, ref bool aborted)
 		{
-			CopyFile(form.Handle, source, destination, "Copying File " + System.IO.Path.GetFileName(source) + "...", ref aborted);
+			CopyFileOrDirectory(form.Handle, source, destination, "Copying File " + System.IO.Path.GetFileName(source) + "...", ref aborted);
 		}
 
 		/// <summary>
 		/// Copies a file from one place to another, using the Shell file copying routines.
 		/// </summary>
-		/// <param name="formHandle">Parent form's handle.</param>
+		/// <param name="windowHandle">Parent form's handle.</param>
 		/// <param name="source">Source path.</param>
 		/// <param name="destination">Destination path.</param>
 		/// <param name="progressTitle">Title of progress bar.</param>
 		/// <param name="aborted">Was the operation aborted?</param>
-		public static void CopyFile(IntPtr formHandle, String source, String destination, String progressTitle, ref Boolean aborted)
+		public static void CopyFileOrDirectory(IntPtr windowHandle, string source, string destination, string progressTitle, ref bool aborted)
 		{
 			int retval = 0;
-			Win32API.Shell32.SHFILEOPSTRUCT shf = new Win32API.Shell32.SHFILEOPSTRUCT();
+			var shf = new Win32API.Shell32.SHFILEOPSTRUCT();
 			shf.wFunc = Win32API.Shell32.FO_COPY;
 			shf.fFlags = Win32API.Shell32.FOF_SIMPLEPROGRESS;
 			shf.lpszProgressTitle = progressTitle;
-			shf.hwnd = formHandle;
+            if (windowHandle != IntPtr.Zero)
+            {
+                shf.hwnd = windowHandle;
+            }
 			shf.pFrom = source + "\0";
 			shf.pTo = destination + "\0";
 			shf.fAnyOperationsAborted = false;
@@ -93,20 +96,22 @@ namespace KCS.Common.Shared
 		/// <param name="form">Parent form.</param>
 		/// <param name="paths">Full paths to files or folders (no mixing and matching).</param>
 		/// <param name="aborted">Was the operation aborted?</param>
-        public static void DeleteFiles(IntPtr windowHandle, IEnumerable<string> paths, String progressTitle, ref Boolean aborted)
+        public static void DeleteFilesOrDirectories(IntPtr windowHandle, IEnumerable<string> paths, String progressTitle, ref Boolean aborted)
 		{
             var delimitedPaths = string.Join("\0", paths.ToArray());
             
 			int retval = 0;
-			Win32API.Shell32.SHFILEOPSTRUCT shf = new Win32API.Shell32.SHFILEOPSTRUCT();
-			shf.wFunc = Win32API.Shell32.FO_DELETE;
-			shf.fFlags = Win32API.Shell32.FOF_NOCONFIRMATION;
+			var shf = new Win32API.Shell32.SHFILEOPSTRUCT();
+            shf.wFunc = Win32API.Shell32.FO_DELETE;
+            shf.fFlags = Win32API.Shell32.FOF_ALLOWUNDO | Win32API.Shell32.FOF_NOCONFIRMATION;
             shf.lpszProgressTitle = progressTitle;
+            shf.hwnd = IntPtr.Zero;
             if (windowHandle != IntPtr.Zero)
             {
                 shf.hwnd = windowHandle;
             }
             shf.pFrom = delimitedPaths + "\0";
+            shf.pTo = "\0";
 			shf.fAnyOperationsAborted = false;
 			retval = Win32API.Shell32.SHFileOperation(ref shf);
 			aborted = (retval != 0) || shf.fAnyOperationsAborted;
@@ -130,8 +135,8 @@ namespace KCS.Common.Shared
 		/// <returns>Icon associated with the given file.</returns>
 		public static Icon GetFileIcon(String fullpath, FileIconSize iconSize) 
 		{
-			int retval = 0;
-			Win32API.Shell32.SHFILEINFO info = new Win32API.Shell32.SHFILEINFO();
+			var retval = 0;
+			var info = new Win32API.Shell32.SHFILEINFO();
 			uint flags = Win32API.Shell32.SHGFI_USEFILEATTRIBUTES | Win32API.Shell32.SHGFI_ICON;
 
 			if (iconSize == FileIconSize.Small)
@@ -157,7 +162,7 @@ namespace KCS.Common.Shared
 		public static String GetFileType(String fullpath)
 		{
 			int retval = 0;
-			Win32API.Shell32.SHFILEINFO info = new Win32API.Shell32.SHFILEINFO(true);
+			var info = new Win32API.Shell32.SHFILEINFO(true);
 
 			retval = Win32API.Shell32.SHGetFileInfo(fullpath, 0, ref info, Marshal.SizeOf(info), Win32API.Shell32.SHGFI_TYPENAME);
 			if (retval == 0)
@@ -170,7 +175,7 @@ namespace KCS.Common.Shared
 		/// Gets the path to the icon associated with a file.
 		/// </summary>
 		/// <param name="filePath">Path to document that we need an image for.</param>
-		public static String GetFileIconPath(string filePath)
+		public static string GetFileIconPath(string filePath)
 		{
 			string tempPath = Path.GetDirectoryName(Path.GetTempFileName());
 			return GetFileIconPath(filePath, tempPath);
