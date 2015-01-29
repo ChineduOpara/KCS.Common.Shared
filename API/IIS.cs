@@ -169,8 +169,6 @@ namespace KCS.Common.Shared
                         entry.Comment = comment;
                         entry.IsInHostsFile = true;
                         result.AddEntry(entry);
-                        
-                        // TODO: Save the group names
                     }
                     catch (Exception ex)
                     {
@@ -304,46 +302,11 @@ namespace KCS.Common.Shared
             return results;            
         }
 
-        public static UpdateHostFileResult UpdateHostsFile(IEnumerable<DnsHostEntry> entriesToAdd = null, IEnumerable<DnsHostEntry> entriesToDelete = null, string hostsFilePath = null)
+        public static UpdateHostFileResult UpdateHostsFile(string hostsFilePath = null)
         {
             var result = new UpdateHostFileResult();
-
-            // Process deleted rows
-            if (entriesToDelete != null)
-            {
-                foreach (var entry in entriesToDelete)
-                {
-                    if (_dnsEntries.Contains(entry))
-                    {
-                        result.AddDeleted(entry);
-                        _dnsEntries.Remove(entry);
-                    }
-                }
-            }
-
-            // Process added rows
-            if (entriesToAdd != null)
-            {
-                foreach (var entry in entriesToAdd)
-                {
-                    if (!_dnsEntries.Contains(entry))
-                    {                        
-                        _dnsEntries.Add(entry);
-                        result.AddAdded(entry);
-                    }
-                }
-            }
-
-            // Process the modified rows
-            foreach (var entry in _dnsEntries)
-            {
-                if (entry.IsDirty)
-                {
-                    result.AddModified(entry);
-                }
-            }            
-
-            WriteDnsEntries(hostsFilePath);
+            uint counter;
+            WriteDnsEntries(hostsFilePath, out counter);
 
             _dnsEntries.ForEach(x => x.ResetDirty());
 
@@ -354,9 +317,10 @@ namespace KCS.Common.Shared
         /// Group the list and output to file.
         /// </summary>
         /// <param name="entries"></param>
-        private static Exception WriteDnsEntries(string hostsFilePath)
+        private static Exception WriteDnsEntries(string hostsFilePath, out uint counter)
         {
             Exception exception = null;
+            counter = 0;
 
             // Make sure the hosts file is valid
             if (string.IsNullOrWhiteSpace(hostsFilePath) || !File.Exists(hostsFilePath))
@@ -390,6 +354,7 @@ namespace KCS.Common.Shared
                         sb.AppendFormat(new string(' ', 20) + "# {0}", dnsEntry.Comment);
                     }
                     sb.AppendLine();
+                    counter++;
                 }
                 sb.AppendLine();
             }
