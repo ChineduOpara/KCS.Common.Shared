@@ -306,7 +306,46 @@ namespace KCS.Common.Shared
         {
             var result = new UpdateHostFileResult();
             uint counter;
-            WriteDnsEntries(hostsFilePath, out counter);
+            var exception = WriteDnsEntries(hostsFilePath, out counter);
+
+            if (exception != null)
+            {
+                result.AddException(exception);
+            }
+            result.Written = counter;
+
+            _dnsEntries.ForEach(x => x.ResetDirty());
+
+            return result;
+        }
+
+        public static UpdateHostFileResult DisableDnsEntries(string hostsFilePath = null)
+        {
+            var result = new UpdateHostFileResult();
+
+            // If there are no enabled entries, bail out.
+            var enabledEntries = _dnsEntries.Where(x => x.Enabled);
+            if (!enabledEntries.Any())
+            {
+                return result;
+            }
+
+            // Disable whichever ones are enabled.
+            uint counter = 0;
+            foreach(var entry in enabledEntries)
+            {
+                entry.Enabled = false;
+                counter++;
+            };
+            result.Written = counter;
+
+            uint writtenCount;
+            var exception = WriteDnsEntries(hostsFilePath, out writtenCount);
+
+            if (exception != null)
+            {
+                result.AddException(exception);
+            }            
 
             _dnsEntries.ForEach(x => x.ResetDirty());
 

@@ -19,6 +19,7 @@ namespace KCS.Common.Shared
 
         public UpdateHostFileResult()
         {
+            Written = 0;
             _exceptions = new List<Exception>();
         }
 
