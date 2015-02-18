@@ -1022,6 +1022,16 @@ namespace KCS.Common.Shared
         }
         #endregion
 
+        public static void AppendText(this RichTextBox box, string text, Color color, bool bold = false)
+        {
+            box.SelectionStart = box.TextLength;
+            box.SelectionLength = 0;
+
+            box.SelectionColor = color;
+            box.AppendText(text);
+            box.SelectionColor = box.ForeColor;
+        }
+
         /// <summary>
         /// Created by 9OPARA7. Gets if the control is in design mode, or if any of its parents are in design mode.
         /// </summary>

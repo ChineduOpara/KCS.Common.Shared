@@ -1373,7 +1373,7 @@ namespace KCS.Common.Shared
             if (colName != null && colName != "") dr[colName] = DBNull.Value;
         }
 
-        public static bool GetBoolValue(object v)
+        public static bool GetBooleanValue(object v)
         {
             if (IsEmpty(v))
             {
@@ -1382,6 +1382,18 @@ namespace KCS.Common.Shared
             else
             {
                 return Convert.ToBoolean(v);
+            }
+        }
+
+        public static bool GetBooleanValue(string value, string trueString = "Y")
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+            else
+            {
+                return value.Equals(trueString, StringComparison.CurrentCultureIgnoreCase);
             }
         }
 
