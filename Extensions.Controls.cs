@@ -64,6 +64,13 @@ namespace KCS.Common.Shared
             return list;
         }
 
+        public static IEnumerable<T> GetControls<T>(this Control parent, bool includeNested = true)
+        {
+            var types = new List<Type>() { typeof(T) };
+            var controls = GetControls(parent, includeNested, types, new List<string>());
+            return controls.Cast<T>();
+        }
+
         public static List<Control> GetControls(this Control parent, bool includeNested, params Type[] controlTypes)
         {
             return parent.GetControls(includeNested, controlTypes.ToList(), new List<string>());

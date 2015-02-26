@@ -471,16 +471,55 @@ namespace KCS.Common.Shared
             } while (!backedUp);
 
             return backupFilePath;
-        }
+        }        
 
         /// <summary>
         /// Recycle local IIS.
         /// </summary>
-        public static Process Recycle(IntPtr windowHandle, bool waitForExit = true, string serverName = "localhost")
+        public static Process Recycle(IntPtr windowHandle, bool waitForExit = true)
+        {
+            var info = new ProcessStartInfo("iisreset.exe", "/RESTART");
+            info.WindowStyle = ProcessWindowStyle.Normal;
+            info.CreateNoWindow = false;
+            if (windowHandle != IntPtr.Zero)
+            {
+                info.ErrorDialogParentHandle = windowHandle;
+            }
+            var process = Process.Start(info);
+            if (waitForExit)
+            {
+                process.WaitForExit();
+            }
+            return process;
+        }
+
+        /// <summary>
+        /// Recycle IIS on a PC.
+        /// </summary>
+        public static Process Recycle(IntPtr windowHandle, string psExecPath, string serverName, NetworkCredential credential = null, bool waitForExit = true)
         {
             if (serverName.Equals("localhost", StringComparison.CurrentCultureIgnoreCase))
             {
-                var info = new ProcessStartInfo("iisreset.exe", "/RESTART");
+                return Recycle(windowHandle, waitForExit);
+            }
+            else
+            {
+                if (!File.Exists(psExecPath))
+                {
+                    return null;
+                }
+
+                string cmdParameters = string.Empty;
+                if (credential == null)
+                {
+                    cmdParameters = string.Format(@"\\{0} iisreset.exe /RESTART", serverName);
+                }
+                else
+                {
+                    cmdParameters = string.Format(@"\\{0} -u {1} -p {2} iisreset.exe /RESTART", serverName, credential.UserName, credential.Password);
+                }
+
+                var info = new ProcessStartInfo(psExecPath, cmdParameters);
                 info.WindowStyle = ProcessWindowStyle.Normal;
                 info.CreateNoWindow = false;
                 if (windowHandle != IntPtr.Zero)
@@ -492,12 +531,23 @@ namespace KCS.Common.Shared
                 {
                     process.WaitForExit();
                 }
+
                 return process;
             }
-            else
-            {
-                throw new NotSupportedException("Non-local servers are not yet supported");
-            }
+        }
+
+        /// <summary>
+        /// Stops one or more websites, using PsExec.
+        /// </summary>
+        /// <param name="windowHandle">Window handle.</param>
+        /// <param name="psExecPath">Path to PsExec.</param>
+        /// <param name="websites">List of website names.</param>
+        /// <param name="serverName"></param>
+        /// <param name="waitForExit"></param>
+        /// <returns></returns>
+        public static Process StopWebsites(IntPtr windowHandle, string psExecPath, string serverName, IEnumerable<string> websites, bool waitForExit = true)
+        {
+            return null;
         }
     }
 }
