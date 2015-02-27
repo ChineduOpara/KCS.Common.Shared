@@ -13,6 +13,13 @@ namespace KCS.Common.Shared
 {
     public static class IIS
     {
+        public enum WebsiteAction
+        {
+            Recycle,
+            Start,
+            Stop
+        }
+
         private static string _valuesTrackerKey;
         private const string HostEntryGroupNames = "HostEntryGroupNames";
         private const string DefaultHostFilePath = @"C:\Windows\System32\drivers\etc\hosts";
@@ -537,17 +544,113 @@ namespace KCS.Common.Shared
         }
 
         /// <summary>
-        /// Stops one or more websites, using PsExec.
+        /// Starts or stops websites on the local IIS.
         /// </summary>
-        /// <param name="windowHandle">Window handle.</param>
-        /// <param name="psExecPath">Path to PsExec.</param>
-        /// <param name="websites">List of website names.</param>
-        /// <param name="serverName"></param>
+        /// <param name="windowHandle"></param>
+        /// <param name="websites"></param>
         /// <param name="waitForExit"></param>
         /// <returns></returns>
-        public static Process StopWebsites(IntPtr windowHandle, string psExecPath, string serverName, IEnumerable<string> websites, bool waitForExit = true)
+        public static void StartOrStopWebsites(IntPtr windowHandle, IEnumerable<string> websites, WebsiteAction action)
         {
-            return null;
+            var matchingSites = new List<Site>(websites.Count());
+            var targetWebsites = websites.ToList();
+            foreach (var s in ServerManager.Sites)
+            {
+                if (targetWebsites.Contains(s.Name, StringComparer.OrdinalIgnoreCase))                
+                {
+                    matchingSites.Add(s);
+                }
+            }
+
+            foreach (var site in matchingSites)
+            {
+                var state = ObjectState.Stopped;
+                if (action == WebsiteAction.Recycle || action == WebsiteAction.Stop)
+                {
+                    site.Stop();
+                }
+                if (state == ObjectState.Stopped)
+                {
+                    if (action == WebsiteAction.Recycle || action == WebsiteAction.Start)
+                    {
+                        site.Start();
+                    }
+                }
+            }            
+        }
+
+        /// <summary>
+        /// Starts or stops website on the remote server.
+        /// </summary>
+        /// <param name="windowHandle"></param>
+        /// <param name="psExecPath"></param>
+        /// <param name="serverName"></param>
+        /// <param name="websites"></param>
+        /// <param name="action"></param>
+        /// <param name="waitForExit"></param>
+        /// <returns></returns>
+        public static void StartOrStopWebsites(IntPtr windowHandle, string psExecPath, string serverName, IEnumerable<string> websites, WebsiteAction action, NetworkCredential credential = null, bool waitForExit = true)
+        {
+            if (serverName.Equals("localhost", StringComparison.CurrentCultureIgnoreCase))
+            {
+                StartOrStopWebsites(windowHandle, websites, action);
+            }
+            else
+            {
+                if (!File.Exists(psExecPath))
+                {
+                    return;
+                }
+
+                var psExecFile = new FileInfo(psExecPath);
+                var currentDir = Environment.CurrentDirectory;
+                Environment.CurrentDirectory = psExecFile.Directory.FullName;                
+
+                // Generate the batch file that will contain the commands
+                var batchFileName = "Websites.bat";
+                var batchFilePath = Path.Combine(psExecFile.Directory.FullName, batchFileName);
+                var sb = new StringBuilder(@"SET APPCMD=%windir%\system32\inetsrv\appcmd.exe");
+                sb.AppendLine();
+                foreach (var website in websites)
+                {
+                    if (action == WebsiteAction.Recycle || action == WebsiteAction.Stop)
+                    {
+                        sb.AppendFormat("%APPCMD% stop sites {0}\r\n", website);
+                    }
+                    if (action == WebsiteAction.Recycle || action == WebsiteAction.Start)
+                    {
+                        sb.AppendFormat("%APPCMD% start sites {0}\r\n", website);
+                    }
+                }
+                File.WriteAllText(psExecFile.FullName, sb.ToString());
+                return;
+
+                string cmdParameters = string.Empty;
+                if (credential == null)
+                {
+                    cmdParameters = string.Format(@"\\{0} -c {1}", serverName, batchFileName);
+                }
+                else
+                {
+                    cmdParameters = string.Format(@"\\{0} -c {1} -u {2} -p {3}", serverName, credential.UserName, credential.Password, batchFileName);
+                }
+
+                var info = new ProcessStartInfo(psExecFile.Name, cmdParameters);
+                info.WorkingDirectory = Environment.CurrentDirectory;
+                info.WindowStyle = ProcessWindowStyle.Normal;
+                info.CreateNoWindow = false;
+                if (windowHandle != IntPtr.Zero)
+                {
+                    info.ErrorDialogParentHandle = windowHandle;
+                }
+                var process = Process.Start(info);
+                if (waitForExit)
+                {
+                    process.WaitForExit();
+                }
+
+                Environment.CurrentDirectory = currentDir;
+            }
         }
     }
 }
