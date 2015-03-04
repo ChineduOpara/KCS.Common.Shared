@@ -550,8 +550,9 @@ namespace KCS.Common.Shared
         /// <param name="websites"></param>
         /// <param name="waitForExit"></param>
         /// <returns></returns>
-        public static void StartOrStopWebsites(IntPtr windowHandle, IEnumerable<string> websites, WebsiteAction action)
+        public static string[] StartOrStopWebsites(IntPtr windowHandle, IEnumerable<string> websites, WebsiteAction action)
         {
+            var successSites = new List<string>(websites);
             var matchingSites = new List<Site>(websites.Count());
             var targetWebsites = websites.ToList();
             foreach (var s in ServerManager.Sites)
@@ -567,16 +568,27 @@ namespace KCS.Common.Shared
                 var state = ObjectState.Stopped;
                 if (action == WebsiteAction.Recycle || action == WebsiteAction.Stop)
                 {
-                    site.Stop();
+                    site.Stop();                    
                 }
-                if (state == ObjectState.Stopped)
+                if (site.State == ObjectState.Stopped)
                 {
+                    if (action == WebsiteAction.Stop)
+                    {
+                        successSites.Add(site.Name);
+                    }
+
                     if (action == WebsiteAction.Recycle || action == WebsiteAction.Start)
                     {
                         site.Start();
+                        if (site.State == ObjectState.Started)
+                        {
+                            successSites.Add(site.Name);
+                        }
                     }
                 }
-            }            
+            }
+
+            return successSites.ToArray();
         }
 
         /// <summary>
@@ -589,17 +601,18 @@ namespace KCS.Common.Shared
         /// <param name="action"></param>
         /// <param name="waitForExit"></param>
         /// <returns></returns>
-        public static void StartOrStopWebsites(IntPtr windowHandle, string psExecPath, string serverName, IEnumerable<string> websites, WebsiteAction action, NetworkCredential credential = null, bool waitForExit = true)
+        public static Process StartOrStopWebsites(IntPtr windowHandle, string psExecPath, string serverName, IEnumerable<string> websites, WebsiteAction action, NetworkCredential credential = null, bool waitForExit = true)
         {
             if (serverName.Equals("localhost", StringComparison.CurrentCultureIgnoreCase))
             {
                 StartOrStopWebsites(windowHandle, websites, action);
+                return null;
             }
             else
             {
                 if (!File.Exists(psExecPath))
                 {
-                    return;
+                    return null;
                 }
 
                 var psExecFile = new FileInfo(psExecPath);
@@ -615,15 +628,14 @@ namespace KCS.Common.Shared
                 {
                     if (action == WebsiteAction.Recycle || action == WebsiteAction.Stop)
                     {
-                        sb.AppendFormat("%APPCMD% stop sites {0}\r\n", website);
+                        sb.AppendFormat("%APPCMD% stop sites \"{0}\"\r\n", website);
                     }
                     if (action == WebsiteAction.Recycle || action == WebsiteAction.Start)
                     {
-                        sb.AppendFormat("%APPCMD% start sites {0}\r\n", website);
+                        sb.AppendFormat("%APPCMD% start sites \"{0}\"\r\n", website);
                     }
                 }
-                File.WriteAllText(psExecFile.FullName, sb.ToString());
-                return;
+                File.WriteAllText(batchFilePath, sb.ToString());
 
                 string cmdParameters = string.Empty;
                 if (credential == null)
@@ -647,9 +659,15 @@ namespace KCS.Common.Shared
                 if (waitForExit)
                 {
                     process.WaitForExit();
+                    // If there were no errors, delete the batch file.
+                    if (process.ExitCode == 0)
+                    {
+                        File.Delete(batchFilePath);
+                    }
                 }
 
                 Environment.CurrentDirectory = currentDir;
+                return process;
             }
         }
     }
