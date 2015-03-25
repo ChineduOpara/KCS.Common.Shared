@@ -610,7 +610,7 @@ namespace KCS.Common.Shared
             }
             else
             {
-                if (!File.Exists(psExecPath))
+                if (!File.Exists(psExecPath) || !websites.Any())
                 {
                     return null;
                 }
