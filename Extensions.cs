@@ -1474,7 +1474,7 @@ namespace KCS.Common.Shared
         }
 
         /// <summary>
-        /// A "common language" representation of the DATE part only.
+        /// A "common language" representation of the Date (and optionally, the Time).
         /// </summary>
         /// <param name="date"></param>
         /// <returns></returns>
