@@ -791,14 +791,63 @@ namespace KCS.Common.Shared
             return counter;
 		}
 
-		/// <summary>
-		/// Ensures that a table contains the given columns of the given type.
-		/// </summary>
-		/// <param name="dt">Datatable.</param>
-		/// <param name="type">Desired type of the columns.</param>
-		/// <param name="columns">Column Names.</param>
+        public static string[] RemoveColumns(this DataTable dt, params string[] columns)
+        {
+            int i = 0;
+            var list = new List<string>();
+            do
+            {
+                var col = dt.Columns[i];
+                var contains = columns.Where(x => x.IndexOf(col.ColumnName, StringComparison.CurrentCultureIgnoreCase) > -1).Any();
+                if (contains)
+                {                    
+                    list.Add(col.ColumnName);
+                    dt.Columns.Remove(col);
+                }
+                else
+                {
+                    i++;
+                }
+            } while (i < dt.Columns.Count);
+            return list.ToArray();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dt"></param>
+        /// <param name="columns"></param>
+        /// <returns>The list of columns removed.</returns>
+        public static string[] PreserveColumns(this DataTable dt, params string[] columns)
+        {
+            int i = 0;
+            var list = new List<string>();
+            do
+            {
+                var col = dt.Columns[i];
+                var contains = columns.Where(x => x.IndexOf(col.ColumnName, StringComparison.CurrentCultureIgnoreCase) > -1).Any();
+                if (!contains)
+                {                    
+                    list.Add(col.ColumnName);
+                    dt.Columns.Remove(col);
+                }
+                else
+                {
+                    i++;
+                }
+            } while (i < dt.Columns.Count);
+            return list.ToArray();
+        }
+
+        /// <summary>
+        /// Ensures that a table contains the given columns of the given type.
+        /// </summary>
+        /// <param name="dt">Datatable.</param>
+        /// <param name="type">Desired type of the columns.</param>
+        /// <param name="columns">Column Names.</param>
         /// <returns>Number of columns added.</returns>
-		public static uint EnsureColumns<T>(this DataTable dt, params string[] columns)
+        public static uint EnsureColumns<T>(this DataTable dt, params string[] columns)
 		{
             uint counter = 0;
 			foreach (string name in columns)
@@ -846,14 +895,6 @@ namespace KCS.Common.Shared
 		public static uint EnsureColumns(this DataTable dt, Dictionary<string, Type> columns)
 		{
             uint counter = 0;
-            //foreach (KeyValuePair<string, Type> pair in columns)
-            //{
-            //    if (!dt.Columns.Contains(pair.Key.ToUpper()))
-            //    {
-            //        dt.Columns.Add(pair.Key.ToUpper(), pair.Value);
-            //        counter++;
-            //    }
-            //}
 
             foreach (KeyValuePair<string, Type> pair in columns)
             {
@@ -875,14 +916,6 @@ namespace KCS.Common.Shared
 		/// <param name="name"></param>
 		public static DataColumn EnsureColumn(this DataTable dt, string name, Type type)
 		{
-            //if (dt.Columns.Contains(name.ToUpper()))
-            //{
-            //    return dt.Columns[name.ToUpper()];
-            //}
-            //else
-            //{
-            //    return dt.Columns.Add(name.ToUpper(), type);
-            //}
             if (dt.Columns.Contains(name))
             {
                 return dt.Columns[name];
@@ -985,20 +1018,6 @@ namespace KCS.Common.Shared
         public static DataColumn EnsureColumn<T>(this DataTable dt, string name/*, bool allowNull, T defaultValue*/)
         {
             DataColumn c = dt.EnsureColumn(name, typeof(T));
-            //if (!Convert.IsDBNull(defaultValue) || defaultValue == null)
-            //{
-            //    foreach (DataRow dr in dt.Rows)
-            //    {
-            //        dr[name] = defaultValue;
-            //    }
-
-            //    if (!allowNull)
-            //    {
-            //        dt.Columns[name].AllowDBNull = allowNull;
-            //    }
-            //}
-            
-
             return c;
         }		
 
